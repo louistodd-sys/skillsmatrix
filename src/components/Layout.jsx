@@ -1,0 +1,150 @@
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import {
+  LayoutDashboard, Grid3X3, BarChart3, Users, FolderKanban,
+  BookOpen, ScrollText, Settings, Bell, Menu, X, LogOut, ChevronRight
+} from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import useOrganisation from '@/lib/useOrganisation';
+import NotificationCenter from '@/components/NotificationCenter';
+
+const adminNav = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { label: 'Skills Matrix', icon: Grid3X3, path: '/matrix' },
+  { label: 'Gap Analysis', icon: BarChart3, path: '/gap-analysis' },
+  { label: 'Teams', icon: FolderKanban, path: '/teams' },
+  { label: 'Users', icon: Users, path: '/users' },
+  { label: 'Skills Library', icon: BookOpen, path: '/skills-library' },
+  { label: 'Audit Log', icon: ScrollText, path: '/audit-log' },
+  { label: 'Settings', icon: Settings, path: '/settings' },
+];
+
+const managerNav = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { label: 'Skills Matrix', icon: Grid3X3, path: '/matrix' },
+  { label: 'Gap Analysis', icon: BarChart3, path: '/gap-analysis' },
+  { label: 'My Team', icon: FolderKanban, path: '/teams' },
+];
+
+const viewerNav = [
+  { label: 'My Skills', icon: BookOpen, path: '/my-profile' },
+];
+
+export default function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const location = useLocation();
+  const { org, user } = useOrganisation();
+
+  const role = user?.role || 'viewer';
+  const navItems = role === 'admin' ? adminNav : role === 'manager' ? managerNav : viewerNav;
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col
+        transform transition-transform duration-200 ease-in-out
+        lg:relative lg:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Logo area */}
+        <div className="h-16 flex items-center justify-between px-5 border-b border-border">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Grid3X3 className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-foreground text-[15px] tracking-tight">
+              {org?.name || 'SkillsMatrix'}
+            </span>
+          </Link>
+          <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+            <X className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <div className="space-y-0.5">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path || 
+                (item.path !== '/' && location.pathname.startsWith(item.path));
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    ${isActive
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }
+                  `}
+                >
+                  <item.icon className="w-[18px] h-[18px]" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* User section */}
+        <div className="border-t border-border p-3">
+          <div className="flex items-center gap-3 px-2 py-2">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
+              {(user?.full_name || 'U')[0].toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{user?.full_name || 'User'}</p>
+              <p className="text-xs text-muted-foreground capitalize">{role}</p>
+            </div>
+            <button onClick={() => base44.auth.logout()} title="Logout">
+              <LogOut className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 shrink-0">
+          <div className="flex items-center gap-3">
+            <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-5 h-5 text-foreground" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => setNotifOpen(!notifOpen)}
+            >
+              <Bell className="w-[18px] h-[18px]" />
+            </Button>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+
+      {/* Notification center */}
+      {notifOpen && <NotificationCenter onClose={() => setNotifOpen(false)} />}
+    </div>
+  );
+}

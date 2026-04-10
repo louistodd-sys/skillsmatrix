@@ -5,7 +5,19 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import SkillsMatrix from './pages/SkillsMatrix';
+import GapAnalysis from './pages/GapAnalysis';
+import Teams from './pages/Teams';
+import TeamDetail from './pages/TeamDetail';
+import UsersPage from './pages/UsersPage';
+import UserProfile from './pages/UserProfile';
+import SkillsLibrary from './pages/SkillsLibrary';
+import AuditLog from './pages/AuditLog';
+import Settings from './pages/Settings';
+import MyProfile from './pages/MyProfile';
+import Onboarding from './pages/Onboarding';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,7 +45,20 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/matrix" element={<SkillsMatrix />} />
+        <Route path="/gap-analysis" element={<GapAnalysis />} />
+        <Route path="/teams" element={<Teams />} />
+        <Route path="/teams/:teamId" element={<TeamDetail />} />
+        <Route path="/users" element={<UsersPage />} />
+        <Route path="/users/:userId" element={<UserProfile />} />
+        <Route path="/skills-library" element={<SkillsLibrary />} />
+        <Route path="/audit-log" element={<AuditLog />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/my-profile" element={<MyProfile />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

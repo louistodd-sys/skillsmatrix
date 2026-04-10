@@ -1,0 +1,51 @@
+{
+  "name": "Organisation",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Organisation Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "URL Slug"
+    },
+    "logo_url": {
+      "type": "string",
+      "title": "Logo URL"
+    },
+    "timezone": {
+      "type": "string",
+      "title": "Timezone",
+      "default": "Europe/London"
+    },
+    "locale": {
+      "type": "string",
+      "title": "Locale",
+      "default": "en-GB"
+    },
+    "notify_users_on_expiry": {
+      "type": "boolean",
+      "title": "Notify Users on Expiry",
+      "default": false
+    },
+    "weekly_digest_enabled": {
+      "type": "boolean",
+      "title": "Weekly Digest Enabled",
+      "default": true
+    },
+    "onboarding_completed": {
+      "type": "boolean",
+      "title": "Onboarding Completed",
+      "default": false
+    },
+    "onboarding_step": {
+      "type": "number",
+      "title": "Current Onboarding Step",
+      "default": 1
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
