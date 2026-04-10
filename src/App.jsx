@@ -18,6 +18,7 @@ import AuditLog from './pages/AuditLog';
 import Settings from './pages/Settings';
 import MyProfile from './pages/MyProfile';
 import Onboarding from './pages/Onboarding';
+import PeoplePage from './pages/PeoplePage';
 import People from './pages/People';
 
 const AuthenticatedApp = () => {
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
         <Route path="/audit-log" element={<AuditLog />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/my-profile" element={<MyProfile />} />
+        <Route path="/people" element={<PeoplePage />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
