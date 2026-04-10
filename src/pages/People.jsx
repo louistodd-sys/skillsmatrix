@@ -69,45 +69,42 @@ function SkillRow({ ps }) {
   const Icon = rag.Icon;
   const exp = ps.assessment?.expiry_date ? expiryText(ps.assessment.expiry_date) : null;
   return (
-    <tr className="border-b border-border/40 hover:bg-muted/20 transition-colors group">
-      <td className="py-3 pl-4 pr-2 w-8">
+    <tr className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+      <td className="py-2.5 pl-4 pr-2 w-10 align-middle">
         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${rag.bg}`}>
           <Icon className={`w-3.5 h-3.5 ${rag.text}`} />
         </div>
       </td>
-      <td className="py-3 px-2">
-        <div className="flex items-center gap-2 flex-wrap">
+      <td className="py-2.5 px-3 align-middle">
+        <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{ps.skill.name}</span>
           {ps.isRequired && (
-            <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/10 text-primary">Required</span>
+            <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0">Required</span>
           )}
         </div>
       </td>
-      <td className="py-3 px-2">
+      <td className="py-2.5 px-3 w-28 align-middle">
         <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${rag.bg} ${rag.text}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${rag.dot}`} />
           {rag.label}
         </span>
       </td>
-      <td className="py-3 px-2 text-xs text-muted-foreground">
-        {ps.assessment ? getProficiencyLabel(ps.assessment.proficiency_level, ps.skill.scale_type) : <span className="italic">Not assessed</span>}
+      <td className="py-2.5 px-3 w-36 text-xs text-muted-foreground align-middle">
+        {ps.assessment ? getProficiencyLabel(ps.assessment.proficiency_level, ps.skill.scale_type) : <span className="italic text-muted-foreground/60">Not assessed</span>}
       </td>
-      <td className="py-3 px-2 text-xs text-muted-foreground hidden sm:table-cell">
+      <td className="py-2.5 px-3 w-32 text-xs text-muted-foreground hidden sm:table-cell align-middle">
         {ps.assessment?.assessed_date ? format(parseISO(ps.assessment.assessed_date), 'd MMM yyyy') : '—'}
       </td>
-      <td className="py-3 px-2 hidden md:table-cell">
+      <td className="py-2.5 px-3 w-40 hidden md:table-cell align-middle">
         {exp ? (
           <span className={`text-xs font-medium ${exp.urgent ? 'text-red-600' : 'text-muted-foreground'}`}>{exp.text}</span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </td>
-      <td className="py-3 px-2 pr-4 hidden lg:table-cell">
+      <td className="py-2.5 px-3 pr-4 w-36 hidden lg:table-cell align-middle">
         {ps.assessment?.assessed_by_name ? (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <User className="w-3 h-3 shrink-0" />
-            {ps.assessment.assessed_by_name}
-          </div>
+          <span className="text-xs text-muted-foreground">{ps.assessment.assessed_by_name}</span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
@@ -231,53 +228,41 @@ function PersonCard({ person, personSkills, categories, skills, teamNames }) {
           {sortedCats.length === 0 ? (
             <p className="px-6 py-4 text-sm text-muted-foreground">No required skills assigned to this person's teams.</p>
           ) : (
-            sortedCats.map(cat => (
-              <div key={cat.name}>
-                {/* Category header */}
-                <div className="flex items-center gap-2 px-4 py-2 bg-muted/30 border-b border-border/60">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.colour || '#94a3b8' }} />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{cat.name}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{cat.skills.length} skill{cat.skills.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border/40 bg-muted/10">
-                        <th className="w-8 pl-4" />
-                        <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2 px-2">Skill</th>
-                        <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2 px-2">Status</th>
-                        <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2 px-2">Level</th>
-                        <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2 px-2 hidden sm:table-cell">Assessed</th>
-                        <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2 px-2 hidden md:table-cell">Expires</th>
-                        <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2 px-2 pr-4 hidden lg:table-cell">Assessed By</th>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="w-10 pl-4" />
+                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2.5 px-3">Skill</th>
+                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2.5 px-3 w-28">Status</th>
+                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2.5 px-3 w-36">Level</th>
+                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2.5 px-3 w-32 hidden sm:table-cell">Assessed</th>
+                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2.5 px-3 w-40 hidden md:table-cell">Expires</th>
+                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-2.5 px-3 pr-4 w-36 hidden lg:table-cell">Assessed By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedCats.map(cat => (
+                    <>
+                      {/* Category separator row */}
+                      <tr key={`cat-${cat.name}`} className="bg-muted/20 border-y border-border/50">
+                        <td colSpan={7} className="py-1.5 pl-4 pr-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.colour || '#94a3b8' }} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{cat.name}</span>
+                            <span className="text-[10px] text-muted-foreground/60 ml-1">({cat.skills.length})</span>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
                       {cat.skills
                         .sort((a, b) => (sortOrder[a.rag] ?? 4) - (sortOrder[b.rag] ?? 4))
                         .map(ps => <SkillRow key={ps.skill_id} ps={ps} />)}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))
-          )}
-          <div className="px-4 py-3 border-t border-border flex items-center justify-between bg-muted/10">
-            <div className="flex gap-3 text-xs text-muted-foreground">
-              {Object.entries(ragCounts).filter(([,v]) => v > 0).map(([k, v]) => (
-                <span key={k} className="flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${RAG[k].dot}`} />
-                  {v} {RAG[k].label.toLowerCase()}
-                </span>
-              ))}
+                    </>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <Link
-              to={`/users/${person.userId}`}
-              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-            >
-              View full profile &amp; assess <ExternalLink className="w-3 h-3" />
-            </Link>
-          </div>
+          )}
         </div>
       )}
     </div>
