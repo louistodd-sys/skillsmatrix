@@ -15,6 +15,7 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
     assessed_date: existingAssessment?.assessed_date || new Date().toISOString().split('T')[0],
     expiry_date: existingAssessment?.expiry_date || '',
     notes: existingAssessment?.notes || '',
+    assessed_by_name: existingAssessment?.assessed_by_name || user?.full_name || '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -33,7 +34,7 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
       expiry_date: form.expiry_date || null,
       notes: form.notes || null,
       assessed_by_user_id: user?.id,
-      assessed_by_name: user?.full_name,
+      assessed_by_name: form.assessed_by_name || user?.full_name,
     });
 
     // Write audit log entry for every assessment
@@ -140,6 +141,18 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
               type="date"
               value={form.expiry_date}
               onChange={e => setForm({ ...form, expiry_date: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+
+          {/* Assessed By */}
+          <div>
+            <Label>Assessed By <span className="text-muted-foreground text-xs font-normal">(defaults to you)</span></Label>
+            <Input
+              type="text"
+              value={form.assessed_by_name}
+              onChange={e => setForm({ ...form, assessed_by_name: e.target.value })}
+              placeholder={user?.full_name || 'Name of assessor'}
               className="mt-1"
             />
           </div>
