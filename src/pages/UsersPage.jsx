@@ -394,7 +394,7 @@ export default function UsersPage() {
                     return (
                       <tr key={e.user_id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3">
-                          <Link to={`/users/${e.user_id}`} className="flex items-center gap-3 group">
+                          <Link to="/people" className="flex items-center gap-3 group">
                             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs font-semibold shrink-0">
                               {(e.user_name || '?')[0].toUpperCase()}
                             </div>
