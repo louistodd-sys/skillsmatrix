@@ -1,51 +1,83 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Grid3X3, BarChart3, Users, FolderKanban,
-  BookOpen, ScrollText, Settings, Bell, Menu, X, LogOut, ChevronRight
+  BookOpen, ScrollText, Settings, Bell, Menu, X, LogOut,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import useOrganisation from '@/lib/useOrganisation';
 import NotificationCenter from '@/components/NotificationCenter';
 
 const adminNav = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Skills Matrix', icon: Grid3X3, path: '/matrix' },
-  { label: 'Gap Analysis', icon: BarChart3, path: '/gap-analysis' },
-  { label: 'Teams', icon: FolderKanban, path: '/teams' },
-  { label: 'Users', icon: Users, path: '/users' },
-  { label: 'Skills Library', icon: BookOpen, path: '/skills-library' },
-  { label: 'Audit Log', icon: ScrollText, path: '/audit-log' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
+  { label: 'Dashboard',     icon: LayoutDashboard, path: '/' },
+  { label: 'Skills Matrix', icon: Grid3X3,          path: '/matrix' },
+  { label: 'Gap Analysis',  icon: BarChart3,         path: '/gap-analysis' },
+  { label: 'Teams',         icon: FolderKanban,      path: '/teams' },
+  { label: 'Users',         icon: Users,             path: '/users' },
+  { label: 'Skills Library',icon: BookOpen,          path: '/skills-library' },
+  { label: 'Audit Log',     icon: ScrollText,        path: '/audit-log' },
+  { label: 'Settings',      icon: Settings,          path: '/settings' },
 ];
 
 const managerNav = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Skills Matrix', icon: Grid3X3, path: '/matrix' },
-  { label: 'Gap Analysis', icon: BarChart3, path: '/gap-analysis' },
-  { label: 'My Team', icon: FolderKanban, path: '/teams' },
+  { label: 'Dashboard',     icon: LayoutDashboard, path: '/' },
+  { label: 'Skills Matrix', icon: Grid3X3,          path: '/matrix' },
+  { label: 'Gap Analysis',  icon: BarChart3,         path: '/gap-analysis' },
+  { label: 'My Team',       icon: FolderKanban,      path: '/teams' },
 ];
 
 const viewerNav = [
-  { label: 'My Skills', icon: BookOpen, path: '/my-profile' },
+  { label: 'My Skills',     icon: BookOpen,          path: '/my-profile' },
 ];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifOpen, setNotifOpen]     = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const { org, user } = useOrganisation();
 
-  const role = user?.role || 'viewer';
-  const navItems = role === 'admin' ? adminNav : role === 'manager' ? managerNav : viewerNav;
+  const role      = user?.role || 'viewer';
+  const navItems  = role === 'admin' ? adminNav : role === 'manager' ? managerNav : viewerNav;
+
+  // Poll unread notifications count every 60 seconds
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const fetchCount = async () => {
+      try {
+        const notifs = await base44.entities.Notification.filter(
+          { user_id: user.id },
+          '-created_date',
+          50
+        );
+        if (!cancelled) {
+          setUnreadCount(notifs.filter(n => !n.read_at).length);
+        }
+      } catch (_) {}
+    };
+
+    fetchCount();
+    const interval = setInterval(fetchCount, 60_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [user?.id]);
+
+  const handleNotifOpen = () => {
+    setNotifOpen(o => !o);
+    // Optimistically clear the badge when panel opens
+    if (!notifOpen) setUnreadCount(0);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Sidebar */}
@@ -55,17 +87,27 @@ export default function Layout() {
         lg:relative lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        {/* Logo area */}
-        <div className="h-16 flex items-center justify-between px-5 border-b border-border">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Grid3X3 className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-foreground text-[15px] tracking-tight">
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-between px-5 border-b border-border shrink-0">
+          <Link to="/" className="flex items-center gap-2.5 min-w-0">
+            {org?.logo_url
+              ? (
+                <img
+                  src={org.logo_url}
+                  alt={org.name}
+                  className="w-8 h-8 rounded-lg object-contain border border-border bg-white"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                  <Grid3X3 className="w-4 h-4 text-primary-foreground" />
+                </div>
+              )
+            }
+            <span className="font-semibold text-foreground text-[15px] tracking-tight truncate">
               {org?.name || 'SkillsMatrix'}
             </span>
           </Link>
-          <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <button className="lg:hidden shrink-0 ml-2" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
@@ -73,8 +115,9 @@ export default function Layout() {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
           <div className="space-y-0.5">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path || 
+            {navItems.map(item => {
+              const isActive =
+                location.pathname === item.path ||
                 (item.path !== '/' && location.pathname.startsWith(item.path));
               return (
                 <Link
@@ -85,11 +128,10 @@ export default function Layout() {
                     flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                     ${isActive
                       ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'}
                   `}
                 >
-                  <item.icon className="w-[18px] h-[18px]" />
+                  <item.icon className="w-[18px] h-[18px] shrink-0" />
                   {item.label}
                 </Link>
               );
@@ -98,16 +140,20 @@ export default function Layout() {
         </nav>
 
         {/* User section */}
-        <div className="border-t border-border p-3">
+        <div className="border-t border-border p-3 shrink-0">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold shrink-0">
               {(user?.full_name || 'U')[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{user?.full_name || 'User'}</p>
               <p className="text-xs text-muted-foreground capitalize">{role}</p>
             </div>
-            <button onClick={() => base44.auth.logout()} title="Logout">
+            <button
+              onClick={() => base44.auth.logout()}
+              title="Logout"
+              className="shrink-0"
+            >
               <LogOut className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
             </button>
           </div>
@@ -118,21 +164,27 @@ export default function Layout() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-              <Menu className="w-5 h-5 text-foreground" />
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => setNotifOpen(!notifOpen)}
-            >
-              <Bell className="w-[18px] h-[18px]" />
-            </Button>
-          </div>
+          <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
+
+          <div className="flex-1" />
+
+          {/* Notification bell with unread badge */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={handleNotifOpen}
+            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+          >
+            <Bell className="w-[18px] h-[18px]" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </Button>
         </header>
 
         {/* Page content */}
@@ -143,8 +195,13 @@ export default function Layout() {
         </main>
       </div>
 
-      {/* Notification center */}
-      {notifOpen && <NotificationCenter onClose={() => setNotifOpen(false)} />}
+      {/* Notification panel */}
+      {notifOpen && (
+        <NotificationCenter
+          onClose={() => setNotifOpen(false)}
+          onRead={() => setUnreadCount(0)}
+        />
+      )}
     </div>
   );
 }
