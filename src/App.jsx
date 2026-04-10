@@ -18,7 +18,6 @@ import AuditLog from './pages/AuditLog';
 import Settings from './pages/Settings';
 import MyProfile from './pages/MyProfile';
 import Onboarding from './pages/Onboarding';
-import Paywall from './pages/Paywall';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -47,7 +46,6 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/upgrade" element={<Paywall />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/matrix" element={<SkillsMatrix />} />
