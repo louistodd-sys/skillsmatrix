@@ -1,58 +1,98 @@
 import { useState, useEffect } from 'react';
-import { Grid3X3, Search, Layers, BarChart2, Users, ChevronDown } from 'lucide-react';
+import { Grid3X3, Search, Users } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/EmptyState';
-import RAGBadge from '@/components/RAGBadge';
 import AssessmentModal from '@/components/AssessmentModal';
 import BulkAssessmentModal from '@/components/BulkAssessmentModal';
-import { getRAGStatus, getRAGColors, getProficiencyLabel } from '@/lib/ragUtils';
+import { getRAGStatus, getProficiencyLabel, getRAGLabel } from '@/lib/ragUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-// ─── RAG Legend ───────────────────────────────────────────────────────────────
-function RAGLegend() {
-  const items = [
-    { color: 'bg-green-500', label: 'Current' },
-    { color: 'bg-amber-400', label: 'Expiring Soon' },
-    { color: 'bg-red-500',   label: 'Expired / Missing' },
-    { color: 'bg-gray-200',  label: 'Not Assessed' },
-  ];
+// ─── Layout constants ──────────────────────────────────────────────────────
+const CELL  = 52;  // skill cell px (width + height)
+const NAME  = 224; // name column width px
+const COL   = 62;  // skill column width px
+const CAT_H = 44;  // category header row height px
+
+// ─── Status colour palette ─────────────────────────────────────────────────
+const S = {
+  green: { bg: '#16a34a', fg: '#ffffff' },
+  amber: { bg: '#d97706', fg: '#ffffff' },
+  red:   { bg: '#dc2626', fg: '#ffffff' },
+  grey:  { bg: '#f1f5f9', fg: '#64748b' },
+};
+
+// Symbol shown inside each cell
+function getCellSymbol(assessment, skill) {
+  if (!assessment) return '—';
+  if (skill.scale_type === 'binary') return assessment.proficiency_level >= 1 ? '✓' : '✗';
+  return String(assessment.proficiency_level);
+}
+
+// Coverage % → colour style
+function pctStyle(pct) {
+  if (pct >= 80) return { bg: '#dcfce7', fg: '#15803d' };
+  if (pct >= 50) return { bg: '#fef3c7', fg: '#92400e' };
+  return { bg: '#fee2e2', fg: '#991b1b' };
+}
+
+// ─── Status key legend ─────────────────────────────────────────────────────
+function MatrixLegend() {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-      {items.map(({ color, label }) => (
-        <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className={`w-3 h-3 rounded-sm shrink-0 ${color}`} />
-          {label}
-        </span>
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-xl border border-border bg-card px-5 py-4 shadow-sm">
+      <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+        Status Key
+      </span>
+      {[
+        { s: 'green', label: 'Current',    desc: 'Competent & valid',  ex: '✓' },
+        { s: 'amber', label: 'Expiring',   desc: 'Renewal due soon',   ex: '3' },
+        { s: 'red',   label: 'Gap',        desc: 'Expired or not met', ex: '✗' },
+        { s: 'grey',  label: 'Unassessed', desc: 'No record held',     ex: '—' },
+      ].map(({ s, label, desc, ex }) => (
+        <div key={s} className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[22px] font-bold shrink-0 select-none"
+            style={{
+              background: S[s].bg,
+              color: S[s].fg,
+              boxShadow: s === 'grey' ? 'inset 0 0 0 1.5px #cbd5e1' : 'none',
+            }}
+          >
+            {ex}
+          </div>
+          <div className="leading-tight">
+            <p className="text-sm font-bold text-foreground">{label}</p>
+            <p className="text-xs text-muted-foreground">{desc}</p>
+          </div>
+        </div>
       ))}
     </div>
   );
 }
 
+// ─── Main component ────────────────────────────────────────────────────────
 export default function SkillsMatrix() {
   const { org, user } = useOrganisation();
-  const [teams, setTeams]           = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState('all');
-  const [members, setMembers]       = useState([]);
-  const [skills, setSkills]         = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [assessments, setAssessments] = useState([]);
-  const [reqSkills, setReqSkills]   = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [searchParams] = useSearchParams();
 
-  // Controls
-  const [searchMember, setSearchMember]     = useState('');
+  const [teams, setTeams]                   = useState([]);
+  const [selectedTeam, setSelectedTeam]     = useState(searchParams.get('team') || 'all');
+  const [members, setMembers]               = useState([]);
+  const [skills, setSkills]                 = useState([]);
+  const [categories, setCategories]         = useState([]);
+  const [assessments, setAssessments]       = useState([]);
+  const [reqSkills, setReqSkills]           = useState([]);
+  const [loading, setLoading]               = useState(true);
+
+  const [searchMember, setSearchMember]         = useState('');
   const [showOnlyRequired, setShowOnlyRequired] = useState(false);
   const [showOnlyExpiring, setShowOnlyExpiring] = useState(false);
-  const [viewMode, setViewMode]             = useState('rag'); // 'rag' | 'level'
-  const [assessingCell, setAssessingCell]   = useState(null);
-  const [bulkSkill, setBulkSkill]           = useState(null);
+  const [assessingCell, setAssessingCell]       = useState(null);
+  const [bulkSkill, setBulkSkill]               = useState(null);
 
-  useEffect(() => {
-    if (org) loadData();
-  }, [org]);
+  useEffect(() => { if (org) loadData(); }, [org]);
 
   async function loadData() {
     const [t, tm, s, c, a, trs] = await Promise.all([
@@ -79,46 +119,37 @@ export default function SkillsMatrix() {
 
   if (loading) return <div className="h-96 rounded-xl bg-muted animate-pulse" />;
 
-  // Build current assessment map: `${userId}-${skillId}` → latest assessment
+  // Latest assessment per user+skill
   const currentAssessments = {};
   [...assessments]
     .sort((a, b) => (a.assessed_date || '').localeCompare(b.assessed_date || ''))
-    .forEach(a => {
-      currentAssessments[`${a.user_id}-${a.skill_id}`] = a;
-    });
+    .forEach(a => { currentAssessments[`${a.user_id}-${a.skill_id}`] = a; });
 
-  // Filter members by team
+  // Filter + deduplicate members
   let filteredMembers = members;
   if (selectedTeam !== 'all') {
     const ids = new Set(members.filter(m => m.team_id === selectedTeam).map(m => m.user_id));
     filteredMembers = members.filter(m => ids.has(m.user_id));
   }
-  // Deduplicate (user can be in multiple teams)
   const memberMap = {};
   filteredMembers.forEach(m => { if (!memberMap[m.user_id]) memberMap[m.user_id] = m; });
   let uniqueMembers = Object.values(memberMap);
-
-  // Sort alphabetically
   uniqueMembers.sort((a, b) => (a.user_name || '').localeCompare(b.user_name || ''));
-
-  // Name search
   if (searchMember) {
     uniqueMembers = uniqueMembers.filter(m =>
       (m.user_name || '').toLowerCase().includes(searchMember.toLowerCase())
     );
   }
 
-  // Helper: get requirement for a skill in the current team context
+  // Requirement lookup
   const getReq = (userId, skillId) => {
-    if (selectedTeam !== 'all') {
+    if (selectedTeam !== 'all')
       return reqSkills.find(r => r.team_id === selectedTeam && r.skill_id === skillId);
-    }
-    // For "all teams", use the member's primary team
     const tm = members.find(m => m.user_id === userId);
     return tm ? reqSkills.find(r => r.team_id === tm.team_id && r.skill_id === skillId) : undefined;
   };
 
-  // Filter skills
+  // Skill visibility filters
   let visibleSkills = skills;
   if (showOnlyRequired && selectedTeam !== 'all') {
     const reqIds = new Set(
@@ -129,14 +160,12 @@ export default function SkillsMatrix() {
   if (showOnlyExpiring) {
     visibleSkills = visibleSkills.filter(s =>
       uniqueMembers.some(m => {
-        const a = currentAssessments[`${m.user_id}-${s.id}`];
-        const status = getRAGStatus(a, s, getReq(m.user_id, s.id));
-        return status === 'amber' || status === 'red';
+        const st = getRAGStatus(currentAssessments[`${m.user_id}-${s.id}`], s, getReq(m.user_id, s.id));
+        return st === 'amber' || st === 'red';
       })
     );
   }
 
-  // Group skills by category
   const groupedSkills = categories
     .map(cat => ({ ...cat, skills: visibleSkills.filter(s => s.category_id === cat.id) }))
     .filter(g => g.skills.length > 0);
@@ -154,39 +183,42 @@ export default function SkillsMatrix() {
     );
   }
 
-  // Compute per-skill compliance % for summary row
+  // Per-skill coverage %
   const skillCompliance = {};
   allVisibleSkills.forEach(skill => {
     let green = 0;
     uniqueMembers.forEach(m => {
-      const a = currentAssessments[`${m.user_id}-${skill.id}`];
-      const req = getReq(m.user_id, skill.id);
-      if (getRAGStatus(a, skill, req) === 'green') green++;
+      if (getRAGStatus(currentAssessments[`${m.user_id}-${skill.id}`], skill, getReq(m.user_id, skill.id)) === 'green')
+        green++;
     });
     skillCompliance[skill.id] = uniqueMembers.length > 0
       ? Math.round((green / uniqueMembers.length) * 100)
       : 0;
   });
 
-  // Column header rotation threshold
-  const useVertical = allVisibleSkills.length > 5;
+  // Shared border styles
+  const catBorder = (ci) => ci > 0 ? '3px solid white' : '1px solid hsl(var(--border))';
+  const cellBorder = (si, ci) =>
+    si === 0 && ci > 0 ? '3px solid white' : '1px solid hsl(var(--border))';
 
   return (
-    <div className="space-y-4">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Skills Matrix</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Visual overview of team skills and competencies</p>
-        </div>
-        <RAGLegend />
+    <div className="space-y-5">
+      {/* ── Title ── */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Skills Matrix</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {uniqueMembers.length} member{uniqueMembers.length !== 1 ? 's' : ''} ·{' '}
+          {allVisibleSkills.length} skill{allVisibleSkills.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
-      {/* Controls */}
+      {/* ── Legend ── */}
+      <MatrixLegend />
+
+      {/* ── Controls ── */}
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Team filter */}
         <select
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm font-medium"
           value={selectedTeam}
           onChange={e => setSelectedTeam(e.target.value)}
         >
@@ -197,36 +229,18 @@ export default function SkillsMatrix() {
           }
         </select>
 
-        {/* Member search */}
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Search members…"
             value={searchMember}
             onChange={e => setSearchMember(e.target.value)}
-            className="pl-8 h-9 w-44 text-sm"
+            className="pl-8 h-9 w-48 text-sm"
           />
         </div>
 
-        {/* View mode toggle */}
-        <div className="flex items-center rounded-md border border-input overflow-hidden">
-          <button
-            className={`px-3 h-9 text-xs font-medium flex items-center gap-1.5 transition-colors ${viewMode === 'rag' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground'}`}
-            onClick={() => setViewMode('rag')}
-          >
-            <Layers className="w-3.5 h-3.5" /> RAG
-          </button>
-          <button
-            className={`px-3 h-9 text-xs font-medium flex items-center gap-1.5 transition-colors border-l border-input ${viewMode === 'level' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground'}`}
-            onClick={() => setViewMode('level')}
-          >
-            <BarChart2 className="w-3.5 h-3.5" /> Level
-          </button>
-        </div>
-
-        {/* Filters */}
         {selectedTeam !== 'all' && (
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+          <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer select-none">
             <input
               type="checkbox"
               checked={showOnlyRequired}
@@ -236,38 +250,71 @@ export default function SkillsMatrix() {
             Required only
           </label>
         )}
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+        <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer select-none">
           <input
             type="checkbox"
             checked={showOnlyExpiring}
             onChange={e => setShowOnlyExpiring(e.target.checked)}
             className="rounded border-border"
           />
-          Expiring / expired only
+          Gaps / expiring only
         </label>
       </div>
 
-      {/* Desktop Matrix */}
-      <div className="hidden md:block bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      {/* ── Desktop matrix ── */}
+      <div className="hidden md:block rounded-xl border border-border overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <TooltipProvider delayDuration={150}>
-            <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
+          <TooltipProvider delayDuration={100}>
+            <table
+              style={{
+                borderCollapse: 'separate',
+                borderSpacing: 0,
+                width: 'max-content',
+                minWidth: '100%',
+              }}
+            >
               <thead>
-                {/* Category header row */}
+                {/* ── Row 1: Category colour bands ── */}
                 <tr>
                   <th
-                    className="sticky left-0 z-20 bg-card px-4 text-left text-xs font-medium text-muted-foreground border-b border-r border-border"
-                    style={{ minWidth: 180, height: useVertical ? 'auto' : 36 }}
-                    rowSpan={1}
-                  />
-                  {groupedSkills.map((cat, catIdx) => (
+                    style={{
+                      position: 'sticky',
+                      left: 0,
+                      top: 0,
+                      zIndex: 40,
+                      minWidth: NAME,
+                      height: CAT_H,
+                      padding: '0 16px',
+                      background: 'hsl(var(--muted) / 0.6)',
+                      borderBottom: '1px solid hsl(var(--border))',
+                      borderRight: '2px solid hsl(var(--border))',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'hsl(var(--muted-foreground))' }}>
+                      Team Member
+                    </span>
+                  </th>
+                  {groupedSkills.map((cat, ci) => (
                     <th
                       key={cat.id}
                       colSpan={cat.skills.length}
-                      className="px-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider border-b border-border"
                       style={{
-                        color: cat.colour || '#6B7280',
-                        borderLeft: catIdx > 0 ? `2px solid ${cat.colour || '#E2E8F0'}` : undefined,
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 20,
+                        background: cat.colour || '#6B7280',
+                        color: '#ffffff',
+                        height: CAT_H,
+                        padding: '0 8px',
+                        fontSize: 13,
+                        fontWeight: 800,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap',
+                        borderBottom: '2px solid white',
+                        borderLeft: catBorder(ci),
                       }}
                     >
                       {cat.name}
@@ -275,58 +322,75 @@ export default function SkillsMatrix() {
                   ))}
                 </tr>
 
-                {/* Skill name header row */}
+                {/* ── Row 2: Skill names (vertical) ── */}
                 <tr>
-                  <th className="sticky left-0 z-20 bg-card border-b border-r border-border" style={{ minWidth: 180 }} />
-                  {groupedSkills.map((cat, catIdx) =>
-                    cat.skills.map((skill, skillIdx) => {
-                      const isFirstInCat = skillIdx === 0;
-                      return (
-                        <th
-                          key={skill.id}
-                          className="px-1 border-b border-border align-bottom"
-                          style={{
-                            minWidth: 40,
-                            borderLeft: isFirstInCat && catIdx > 0
-                              ? `2px solid ${cat.colour || '#E2E8F0'}`
-                              : undefined,
-                          }}
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
+                  <th
+                    style={{
+                      position: 'sticky',
+                      left: 0,
+                      top: CAT_H,
+                      zIndex: 40,
+                      minWidth: NAME,
+                      background: 'hsl(var(--muted) / 0.6)',
+                      borderBottom: '2px solid hsl(var(--border))',
+                      borderRight: '2px solid hsl(var(--border))',
+                    }}
+                  />
+                  {groupedSkills.map((cat, ci) =>
+                    cat.skills.map((skill, si) => (
+                      <th
+                        key={skill.id}
+                        style={{
+                          position: 'sticky',
+                          top: CAT_H,
+                          zIndex: 10,
+                          width: COL,
+                          minWidth: COL,
+                          height: 152,
+                          background: '#f8fafc',
+                          borderBottom: '2px solid hsl(var(--border))',
+                          borderLeft: cellBorder(si, ci),
+                          padding: '8px 4px 10px',
+                          verticalAlign: 'bottom',
+                        }}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="group flex flex-col items-center w-full"
+                              style={{ height: 140 }}
+                              onClick={() => setBulkSkill(skill)}
+                            >
                               <div
-                                className="text-[10px] text-muted-foreground font-medium mx-auto cursor-pointer"
-                                style={useVertical
-                                  ? { writingMode: 'vertical-rl', textOrientation: 'mixed', height: 80, paddingBottom: 4, overflow: 'hidden', maxWidth: 20 }
-                                  : { maxWidth: 64, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', paddingBottom: 6 }
-                                }
+                                style={{
+                                  writingMode: 'vertical-lr',
+                                  transform: 'rotate(180deg)',
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: 'hsl(var(--foreground))',
+                                  flex: 1,
+                                  overflow: 'hidden',
+                                  lineHeight: 1.35,
+                                  maxHeight: 118,
+                                  paddingBottom: 2,
+                                }}
                               >
                                 {skill.name}
                               </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p className="font-medium">{skill.name}</p>
-                              <p className="text-xs text-muted-foreground">{cat.name}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          {/* Bulk assess button on header hover */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                className="w-full flex justify-center py-0.5 opacity-0 group-hover:opacity-100 hover:opacity-100 text-muted-foreground hover:text-primary transition-opacity"
-                                onClick={() => setBulkSkill(skill)}
-                                title={`Bulk assess: ${skill.name}`}
-                              >
-                                <Users className="w-3 h-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              <p className="text-xs">Bulk assess all members</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </th>
-                      );
-                    })
+                              <Users
+                                style={{ width: 14, height: 14, color: 'hsl(var(--muted-foreground))', marginTop: 4, flexShrink: 0 }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p className="font-semibold">{skill.name}</p>
+                            <p className="text-xs text-muted-foreground">{cat.name}</p>
+                            <p className="text-xs mt-1 text-primary">Click to bulk-assess all members</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </th>
+                    ))
                   )}
                 </tr>
               </thead>
@@ -334,134 +398,171 @@ export default function SkillsMatrix() {
               <tbody>
                 {uniqueMembers.length === 0 && (
                   <tr>
-                    <td colSpan={allVisibleSkills.length + 1} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      No members match your search.
+                    <td
+                      colSpan={allVisibleSkills.length + 1}
+                      style={{ padding: '48px 16px', textAlign: 'center', fontSize: 14, color: 'hsl(var(--muted-foreground))' }}
+                    >
+                      No members match your filters.
                     </td>
                   </tr>
                 )}
-                {uniqueMembers.map((member, idx) => (
-                  <tr
-                    key={member.user_id}
-                    className={idx % 2 === 0 ? 'bg-card' : 'bg-muted/20'}
-                  >
-                    {/* Sticky name column */}
-                    <td
-                      className="sticky left-0 z-10 px-4 py-1.5 text-sm font-medium border-r border-border whitespace-nowrap"
-                      style={{ backgroundColor: idx % 2 === 0 ? 'hsl(var(--card))' : 'hsl(var(--muted) / 0.2)' }}
-                    >
-                      {member.user_name || 'Unknown'}
-                    </td>
 
-                    {/* Skill cells */}
-                    {groupedSkills.map((cat, catIdx) =>
-                      cat.skills.map((skill, skillIdx) => {
-                        const assessment = currentAssessments[`${member.user_id}-${skill.id}`];
-                        const req = getReq(member.user_id, skill.id);
-                        const status = getRAGStatus(assessment, skill, req);
-                        const colors = getRAGColors(status);
-                        const isFirstInCat = skillIdx === 0;
+                {uniqueMembers.map((member, ri) => {
+                  const rowBg = ri % 2 === 0 ? 'hsl(var(--card))' : 'hsl(var(--muted) / 0.12)';
+                  return (
+                    <tr key={member.user_id}>
+                      {/* Sticky name */}
+                      <td
+                        style={{
+                          position: 'sticky',
+                          left: 0,
+                          zIndex: 10,
+                          minWidth: NAME,
+                          height: CELL + 8,
+                          padding: '0 16px',
+                          backgroundColor: rowBg,
+                          borderBottom: '1px solid hsl(var(--border))',
+                          borderRight: '2px solid hsl(var(--border))',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <span style={{ fontSize: 15, fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                          {member.user_name || 'Unknown'}
+                        </span>
+                        {member.is_managed_member && (
+                          <span style={{ display: 'block', fontSize: 10, color: 'hsl(var(--muted-foreground))', fontWeight: 400, marginTop: 1 }}>
+                            Managed
+                          </span>
+                        )}
+                      </td>
 
-                        if (viewMode === 'level') {
-                          // Level text mode
-                          const label = assessment != null
-                            ? getProficiencyLabel(assessment.proficiency_level, skill.scale_type)
-                            : '—';
-                          const short = skill.scale_type === 'binary'
-                            ? (assessment ? (assessment.proficiency_level >= 1 ? '✓' : '✗') : '—')
-                            : (assessment != null ? String(assessment.proficiency_level) : '—');
+                      {/* Skill cells */}
+                      {groupedSkills.map((cat, ci) =>
+                        cat.skills.map((skill, si) => {
+                          const assessment = currentAssessments[`${member.user_id}-${skill.id}`];
+                          const req        = getReq(member.user_id, skill.id);
+                          const status     = getRAGStatus(assessment, skill, req);
+                          const sym        = getCellSymbol(assessment, skill);
+                          const label      = getRAGLabel(status, assessment, skill, req);
+                          const profLabel  = getProficiencyLabel(assessment?.proficiency_level, skill.scale_type);
 
                           return (
                             <td
                               key={skill.id}
-                              className="px-0.5 py-1 text-center"
                               style={{
-                                borderLeft: isFirstInCat && catIdx > 0
-                                  ? `2px solid ${cat.colour || '#E2E8F0'}`
-                                  : undefined,
+                                padding: '3px 5px',
+                                backgroundColor: rowBg,
+                                borderBottom: '1px solid hsl(var(--border))',
+                                borderLeft: cellBorder(si, ci),
+                                textAlign: 'center',
                               }}
                             >
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
-                                    className={`w-9 h-9 rounded text-xs font-bold mx-auto flex items-center justify-center border ${colors.bg} ${colors.text} ${colors.border} hover:opacity-80 transition-opacity`}
+                                    className="rounded-md transition-all hover:scale-110 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary active:scale-95"
+                                    style={{
+                                      width: CELL,
+                                      height: CELL,
+                                      background: S[status].bg,
+                                      color: S[status].fg,
+                                      fontSize: 22,
+                                      fontWeight: 800,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      lineHeight: 1,
+                                      boxShadow: status === 'grey' ? 'inset 0 0 0 1.5px #cbd5e1' : 'none',
+                                    }}
                                     onClick={() => setAssessingCell({ userId: member.user_id, userName: member.user_name, skill, assessment })}
+                                    aria-label={`${member.user_name} — ${skill.name}: ${label}`}
                                   >
-                                    {short}
+                                    {sym}
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="font-medium">{skill.name}</p>
-                                  <p className="text-xs">{label}</p>
-                                  {assessment?.expiry_date && <p className="text-xs">Expires: {assessment.expiry_date}</p>}
-                                  {assessment?.assessed_by_name && <p className="text-xs">By: {assessment.assessed_by_name}</p>}
+                                <TooltipContent side="right" className="w-56">
+                                  <p className="font-semibold text-sm">{member.user_name}</p>
+                                  <p className="text-xs text-muted-foreground mb-2">{skill.name}</p>
+                                  <div className="space-y-0.5 text-xs">
+                                    <p><span className="font-medium">Status:</span> {label}</p>
+                                    <p><span className="font-medium">Level:</span> {profLabel}</p>
+                                    {assessment?.assessed_date && (
+                                      <p><span className="font-medium">Assessed:</span> {assessment.assessed_date}</p>
+                                    )}
+                                    {assessment?.expiry_date && (
+                                      <p><span className="font-medium">Expires:</span> {assessment.expiry_date}</p>
+                                    )}
+                                    {assessment?.assessed_by_name && (
+                                      <p><span className="font-medium">By:</span> {assessment.assessed_by_name}</p>
+                                    )}
+                                    {assessment?.notes && (
+                                      <p className="italic text-muted-foreground">"{assessment.notes}"</p>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-primary mt-2">Click to assess</p>
                                 </TooltipContent>
                               </Tooltip>
                             </td>
                           );
-                        }
+                        })
+                      )}
+                    </tr>
+                  );
+                })}
 
-                        // RAG dot mode
-                        return (
-                          <td
-                            key={skill.id}
-                            className="px-0.5 py-1 text-center"
-                            style={{
-                              borderLeft: isFirstInCat && catIdx > 0
-                                ? `2px solid ${cat.colour || '#E2E8F0'}`
-                                : undefined,
-                            }}
-                          >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  className={`w-9 h-9 rounded mx-auto block ${colors.cell} hover:opacity-75 hover:scale-105 transition-all`}
-                                  onClick={() => setAssessingCell({ userId: member.user_id, userName: member.user_name, skill, assessment })}
-                                  aria-label={`${member.user_name} — ${skill.name}: ${status}`}
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="font-medium">{skill.name}</p>
-                                <p className="text-xs">{getProficiencyLabel(assessment?.proficiency_level, skill.scale_type)}</p>
-                                {assessment?.expiry_date && <p className="text-xs">Expires: {assessment.expiry_date}</p>}
-                                {assessment?.assessed_by_name && <p className="text-xs">By: {assessment.assessed_by_name}</p>}
-                                {assessment?.notes && <p className="text-xs italic">"{assessment.notes}"</p>}
-                              </TooltipContent>
-                            </Tooltip>
-                          </td>
-                        );
-                      })
-                    )}
-                  </tr>
-                ))}
-
-                {/* Compliance summary footer row */}
+                {/* ── Coverage % footer ── */}
                 {uniqueMembers.length > 0 && (
-                  <tr className="border-t-2 border-border bg-muted/40">
-                    <td className="sticky left-0 z-10 px-4 py-2 text-xs font-semibold text-muted-foreground border-r border-border bg-muted/40 whitespace-nowrap">
+                  <tr style={{ borderTop: '2px solid hsl(var(--border))' }}>
+                    <td
+                      style={{
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 10,
+                        minWidth: NAME,
+                        padding: '8px 16px',
+                        background: 'hsl(var(--muted) / 0.5)',
+                        borderRight: '2px solid hsl(var(--border))',
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: 'hsl(var(--muted-foreground))',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       Coverage %
                     </td>
-                    {groupedSkills.map((cat, catIdx) =>
-                      cat.skills.map((skill, skillIdx) => {
+                    {groupedSkills.map((cat, ci) =>
+                      cat.skills.map((skill, si) => {
                         const pct = skillCompliance[skill.id] ?? 0;
-                        const color = pct >= 80 ? 'text-green-700' : pct >= 50 ? 'text-amber-700' : 'text-red-600';
+                        const ps  = pctStyle(pct);
                         return (
                           <td
                             key={skill.id}
-                            className="px-0.5 py-2 text-center"
                             style={{
-                              borderLeft: skillIdx === 0 && catIdx > 0
-                                ? `2px solid ${cat.colour || '#E2E8F0'}`
-                                : undefined,
+                              textAlign: 'center',
+                              padding: '6px 5px',
+                              background: 'hsl(var(--muted) / 0.5)',
+                              borderLeft: cellBorder(si, ci),
                             }}
                           >
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className={`text-[11px] font-bold ${color} cursor-default`}>
+                                <div
+                                  className="rounded font-bold cursor-default"
+                                  style={{
+                                    background: ps.bg,
+                                    color: ps.fg,
+                                    fontSize: 13,
+                                    padding: '4px 2px',
+                                    textAlign: 'center',
+                                  }}
+                                >
                                   {pct}%
-                                </span>
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="text-xs">{skill.name}: {pct}% of members current</p>
+                                <p className="text-xs">{skill.name}: {pct}% current</p>
                               </TooltipContent>
                             </Tooltip>
                           </td>
@@ -476,47 +577,109 @@ export default function SkillsMatrix() {
         </div>
       </div>
 
-      {/* Mobile — card per person */}
+      {/* ── Mobile: card per person ── */}
       <div className="md:hidden space-y-3">
         {uniqueMembers.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-8">No members match your search.</p>
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            No members match your filters.
+          </p>
         )}
-        {uniqueMembers.map(member => (
-          <div key={member.user_id} className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-sm font-semibold mb-3">{member.user_name || 'Unknown'}</h3>
-            <div className="space-y-2">
-              {groupedSkills.map(cat => (
-                <div key={cat.id}>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: cat.colour || '#6B7280' }}>
-                    {cat.name}
+        {uniqueMembers.map(member => {
+          let g = 0, a = 0, r = 0, gr = 0;
+          allVisibleSkills.forEach(skill => {
+            const st = getRAGStatus(
+              currentAssessments[`${member.user_id}-${skill.id}`],
+              skill,
+              getReq(member.user_id, skill.id)
+            );
+            if (st === 'green') g++;
+            else if (st === 'amber') a++;
+            else if (st === 'red') r++;
+            else gr++;
+          });
+
+          return (
+            <div key={member.user_id} className="bg-card border border-border rounded-xl overflow-hidden">
+              {/* Member row header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-b border-border">
+                <div>
+                  <p className="text-[15px] font-bold text-foreground leading-tight">
+                    {member.user_name || 'Unknown'}
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {cat.skills.map(skill => {
-                      const assessment = currentAssessments[`${member.user_id}-${skill.id}`];
-                      const req = getReq(member.user_id, skill.id);
-                      const status = getRAGStatus(assessment, skill, req);
-                      return (
-                        <button
-                          key={skill.id}
-                          onClick={() => setAssessingCell({ userId: member.user_id, userName: member.user_name, skill, assessment })}
-                        >
-                          <RAGBadge status={status} label={skill.name} />
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {member.is_managed_member && (
+                    <span className="text-[10px] text-muted-foreground">Managed</span>
+                  )}
                 </div>
-              ))}
+                <div className="flex gap-1.5">
+                  {[['green', '✓', g], ['amber', '!', a], ['red', '✗', r], ['grey', '—', gr]].map(
+                    ([st, sym, cnt]) => cnt > 0 && (
+                      <span
+                        key={st}
+                        className="w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold"
+                        style={{
+                          background: S[st].bg,
+                          color: S[st].fg,
+                          boxShadow: st === 'grey' ? 'inset 0 0 0 1.5px #cbd5e1' : 'none',
+                        }}
+                      >
+                        {cnt}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Skills grid */}
+              <div className="p-3 space-y-4">
+                {groupedSkills.map(cat => (
+                  <div key={cat.id}>
+                    <p
+                      className="text-[11px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: cat.colour || '#6B7280' }}
+                    >
+                      {cat.name}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {cat.skills.map(skill => {
+                        const assessment = currentAssessments[`${member.user_id}-${skill.id}`];
+                        const status     = getRAGStatus(assessment, skill, getReq(member.user_id, skill.id));
+                        const sym        = getCellSymbol(assessment, skill);
+                        return (
+                          <button
+                            key={skill.id}
+                            className="flex flex-col items-center gap-1 group"
+                            onClick={() => setAssessingCell({ userId: member.user_id, userName: member.user_name, skill, assessment })}
+                          >
+                            <div
+                              className="w-11 h-11 rounded-lg flex items-center justify-center font-bold text-xl transition-all group-hover:scale-110"
+                              style={{
+                                background: S[status].bg,
+                                color: S[status].fg,
+                                boxShadow: status === 'grey' ? 'inset 0 0 0 1.5px #cbd5e1' : 'none',
+                              }}
+                            >
+                              {sym}
+                            </div>
+                            <span className="text-[9px] text-muted-foreground max-w-[44px] text-center leading-tight line-clamp-2">
+                              {skill.name}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Bulk assess hint */}
       {selectedTeam !== 'all' && uniqueMembers.length > 0 && (
         <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
           <Users className="w-3.5 h-3.5" />
-          <span>Click the <Users className="w-3 h-3 inline" /> icon on any skill column header to bulk-assess all team members at once.</span>
+          <span>Click any skill column header to bulk-assess all team members at once.</span>
         </div>
       )}
 

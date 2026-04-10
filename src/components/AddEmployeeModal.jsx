@@ -39,26 +39,20 @@ export default function AddEmployeeModal({ orgId, teams, preselectedTeamId, onCl
     try {
       const fullName = `${form.first_name.trim()} ${form.last_name.trim()}`;
 
-      // Create the Member record
-      const member = await base44.entities.Member.create({
-        organisation_id: orgId,
-        first_name: form.first_name.trim(),
-        last_name: form.last_name.trim(),
-        email: form.email.trim() || null,
-        job_title: form.job_title.trim() || null,
-        status: 'active',
-      });
+      // Generate a stable ID client-side — no separate entity needed.
+      // This ID is stored in TeamMember.user_id and used as the assessment key.
+      const memberId = crypto.randomUUID();
 
       // Create TeamMember entries for each selected team
       await Promise.all(selectedTeams.map(teamId =>
         base44.entities.TeamMember.create({
           organisation_id: orgId,
           team_id: teamId,
-          user_id: member.id,        // use Member.id as the person key
+          user_id: memberId,
           user_name: fullName,
           user_email: form.email.trim() || null,
           is_managed_member: true,
-          member_id: member.id,
+          member_id: memberId,
         })
       ));
 
@@ -69,7 +63,7 @@ export default function AddEmployeeModal({ orgId, teams, preselectedTeamId, onCl
         actor_display: user?.full_name,
         action: 'member.created',
         target_type: 'member',
-        target_id: member.id,
+        target_id: memberId,
         target_display: fullName,
         detail: JSON.stringify({ email: form.email || null, job_title: form.job_title || null }),
       });

@@ -47,17 +47,17 @@ export default function UserProfile() {
     let managed = false;
 
     if (!resolved) {
-      // Try Member entity (managed employee with no login)
-      const members = await base44.entities.Member.filter({ id: userId });
-      if (members[0]) {
-        const m = members[0];
+      // Not a registered user — check if this is a managed employee.
+      // Managed employees have is_managed_member:true on their TeamMember record;
+      // their name/email is denormalised there (no separate entity required).
+      const managedTm = tm.find(m => m.is_managed_member);
+      if (managedTm) {
         resolved = {
-          id: m.id,
-          full_name: `${m.first_name} ${m.last_name}`,
-          email: m.email || '(no email)',
+          id: userId,
+          full_name: managedTm.user_name || `Employee ${userId.slice(0, 8)}`,
+          email: managedTm.user_email || '(no email)',
           role: 'managed employee',
-          status: m.status,
-          job_title: m.job_title,
+          job_title: null,
         };
         managed = true;
       }
@@ -98,10 +98,8 @@ export default function UserProfile() {
     });
     await Promise.all(userMemberships.map(m => base44.entities.TeamMember.delete(m.id)));
 
-    // If managed member, delete Member record. If User, delete User record.
-    if (isManagedMember) {
-      await base44.entities.Member.delete(userId);
-    } else {
+    // Managed members have no separate entity — TeamMember records already deleted above.
+    if (!isManagedMember) {
       try { await base44.entities.User.delete(userId); } catch (_) { /* may be handled by auth system */ }
     }
 
