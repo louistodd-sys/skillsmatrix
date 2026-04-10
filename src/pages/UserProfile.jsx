@@ -83,8 +83,11 @@ export default function UserProfile() {
     ]);
 
     // Resolve: registered User or managed employee?
-    const users = await base44.entities.User.filter({ id: userId });
-    let resolved = users[0] || null;
+    let resolved = null;
+    try {
+      const users = await base44.entities.User.filter({ id: userId });
+      resolved = users[0] || null;
+    } catch (_) {}
     let managed  = false;
 
     if (!resolved) {
