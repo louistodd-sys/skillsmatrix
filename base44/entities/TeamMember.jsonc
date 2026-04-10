@@ -12,15 +12,24 @@
     },
     "user_id": {
       "type": "string",
-      "title": "User ID"
+      "title": "User or Member ID (stores either a User.id or Member.id)"
     },
     "user_email": {
       "type": "string",
-      "title": "User Email"
+      "title": "Email (denormalised for display)"
     },
     "user_name": {
       "type": "string",
-      "title": "User Display Name"
+      "title": "Display Name (denormalised for display)"
+    },
+    "is_managed_member": {
+      "type": "boolean",
+      "title": "Is Managed Member (true = Member record, no app login required)",
+      "default": false
+    },
+    "member_id": {
+      "type": "string",
+      "title": "Member entity ID (set when is_managed_member = true)"
     }
   },
   "required": [

@@ -5,7 +5,7 @@ import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
-export default function NotificationCenter({ onClose }) {
+export default function NotificationCenter({ onClose, onRead }) {
   const { user } = useOrganisation();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,7 @@ export default function NotificationCenter({ onClose }) {
     const unread = notifications.filter(n => !n.read_at);
     await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { read_at: new Date().toISOString() })));
     setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
+    onRead?.();
   };
 
   const unreadCount = notifications.filter(n => !n.read_at).length;
