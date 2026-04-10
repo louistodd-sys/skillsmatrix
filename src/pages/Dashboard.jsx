@@ -216,7 +216,7 @@ export default function Dashboard() {
       .slice(0, 8);
 
     setData({
-      userCount: allUsers.filter(u => u.status === 'active').length,
+      userCount: allUsers.length,
       skillCount: skills.length,
       assessmentCount: assessments.length,
       teamCount: teams.length,

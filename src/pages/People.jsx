@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users2, Search, ChevronDown, ChevronUp, ExternalLink,
@@ -243,9 +243,9 @@ function PersonCard({ person, personSkills, categories, skills, teamNames }) {
                 </thead>
                 <tbody>
                   {sortedCats.map(cat => (
-                    <>
+                    <React.Fragment key={cat.name}>
                       {/* Category separator row */}
-                      <tr key={`cat-${cat.name}`} className="bg-muted/20 border-y border-border/50">
+                      <tr className="bg-muted/20 border-y border-border/50">
                         <td colSpan={7} className="py-1.5 pl-4 pr-3">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.colour || '#94a3b8' }} />
@@ -257,7 +257,7 @@ function PersonCard({ person, personSkills, categories, skills, teamNames }) {
                       {cat.skills
                         .sort((a, b) => (sortOrder[a.rag] ?? 4) - (sortOrder[b.rag] ?? 4))
                         .map(ps => <SkillRow key={ps.skill_id} ps={ps} />)}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

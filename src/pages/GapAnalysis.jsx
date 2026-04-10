@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { BarChart3, Filter } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 export default function GapAnalysis() {
   const { org, user } = useOrganisation();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [teams, setTeams]           = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(searchParams.get('team') || '');
   const [members, setMembers]       = useState([]);
@@ -226,7 +227,7 @@ export default function GapAnalysis() {
           title="No required skills set"
           description="Set required skills for this team to see gap analysis."
           actionLabel="Go to Teams"
-          onAction={() => window.location.href = '/teams'}
+          onAction={() => navigate('/teams')}
         />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

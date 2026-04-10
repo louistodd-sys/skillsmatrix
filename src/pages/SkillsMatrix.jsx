@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Grid3X3, Search, Users } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Input } from '@/components/ui/input';
@@ -96,6 +96,7 @@ function MatrixLegend() {
 export default function SkillsMatrix() {
   const { org, user } = useOrganisation();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [teams, setTeams]                   = useState([]);
   const [selectedTeam, setSelectedTeam]     = useState(searchParams.get('team') || 'all');
@@ -198,7 +199,7 @@ export default function SkillsMatrix() {
         title="Skills Matrix"
         description="Add skills to your library first to see the matrix view."
         actionLabel="Go to Skills Library"
-        onAction={() => window.location.href = '/skills-library'}
+        onAction={() => navigate('/skills-library')}
       />
     );
   }
