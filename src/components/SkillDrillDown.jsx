@@ -1,5 +1,5 @@
-import { X, CheckCircle, XCircle, AlertTriangle, Clock, User } from 'lucide-react';
-import { getRAGStatus, getProficiencyLabel } from '@/lib/ragUtils';
+import { X, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
+import { getRAGStatus } from '@/lib/ragUtils';
 import { format, parseISO, differenceInDays } from 'date-fns';
 
 function StatusIcon({ status }) {
@@ -36,7 +36,7 @@ export default function SkillDrillDown({ skillItem, teamMembers, currentAssessme
   const pct = total > 0 ? Math.round((compliantCount / total) * 100) : 0;
 
   return (
-    <div className="bg-card border border-border rounded-xl flex flex-col h-full">
+    <div className="bg-card border border-border rounded-xl flex flex-col">
       {/* Header */}
       <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -44,7 +44,7 @@ export default function SkillDrillDown({ skillItem, teamMembers, currentAssessme
             {category && (
               <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: category.colour || '#6B7280' }} />
             )}
-            <h2 className="text-base font-semibold truncate">{skill.name}</h2>
+            <h2 className="text-base font-semibold">{skill.name}</h2>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             {category?.name} · {skill.scale_type === 'binary' ? 'Pass/Fail' : 'Levelled 1–4'}
@@ -76,7 +76,7 @@ export default function SkillDrillDown({ skillItem, teamMembers, currentAssessme
       </div>
 
       {/* Member list */}
-      <div className="overflow-y-auto flex-1 divide-y divide-border">
+      <div className="divide-y divide-border">
         {rows.map(m => {
           const sl = statusLabel(m.status);
           return (
@@ -86,13 +86,15 @@ export default function SkillDrillDown({ skillItem, teamMembers, currentAssessme
                 {(m.user_name || '?')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{m.user_name || 'Unknown'}</div>
+                <div className="text-sm font-medium">{m.user_name || 'Unknown'}</div>
                 {m.assessment ? (
-                  <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-2 mt-0.5">
+                  <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                     {skill.scale_type === 'levelled' && (
                       <span>Level {m.assessment.proficiency_level}</span>
                     )}
-                    <span>Assessed {m.assessment.assessed_date ? format(parseISO(m.assessment.assessed_date), 'dd MMM yyyy') : '—'}</span>
+                    {m.assessment.assessed_date && (
+                      <span>Assessed {format(parseISO(m.assessment.assessed_date), 'dd MMM yyyy')}</span>
+                    )}
                     {m.assessment.expiry_date && (
                       <span className={m.expiryDays !== null && m.expiryDays < 0 ? 'text-red-600 font-medium' : m.expiryDays !== null && m.expiryDays < 30 ? 'text-amber-600 font-medium' : ''}>
                         Expires {format(parseISO(m.assessment.expiry_date), 'dd MMM yyyy')}
@@ -103,10 +105,10 @@ export default function SkillDrillDown({ skillItem, teamMembers, currentAssessme
                     {m.assessment.assessed_by_name && <span>by {m.assessment.assessed_by_name}</span>}
                   </div>
                 ) : (
-                  <div className="text-[11px] text-muted-foreground mt-0.5">No assessment on record</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">No assessment on record</div>
                 )}
               </div>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${sl.cls}`}>{sl.text}</span>
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${sl.cls}`}>{sl.text}</span>
             </div>
           );
         })}

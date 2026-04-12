@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Grid3X3, Search, Users } from 'lucide-react';
+import { Grid3X3, Search, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
@@ -40,54 +40,35 @@ function pctStyle(pct) {
 
 // ─── Status key legend ─────────────────────────────────────────────────────
 function MatrixLegend() {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border border-border bg-card px-5 py-4 shadow-sm space-y-3">
-      {/* Status colours row */}
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
-          Status
-        </span>
-        {[
-          { s: 'green', label: 'Current',    desc: 'Competent & valid'  },
-          { s: 'amber', label: 'Expiring',   desc: 'Renewal due soon'   },
-          { s: 'red',   label: 'Gap',        desc: 'Expired or not met' },
-          { s: 'grey',  label: 'Unassessed', desc: 'No record held'     },
-        ].map(({ s, label, desc }) => (
-          <div key={s} className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-lg shrink-0"
-              style={{
-                background: S[s].bg,
-                boxShadow: s === 'grey' ? 'inset 0 0 0 1.5px #cbd5e1' : 'none',
-              }}
-            />
-            <div className="leading-tight">
-              <p className="text-sm font-bold text-foreground">{label}</p>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+    <div className="rounded-xl border border-border bg-card shadow-sm">
+      <button
+        className="w-full flex items-center justify-between px-5 py-3 text-left"
+        onClick={() => setOpen(o => !o)}
+      >
+        <div className="flex items-center gap-4 flex-wrap">
+          {[['green','Current','#16a34a'],['amber','Expiring','#d97706'],['red','Gap','#dc2626'],['grey','Unassessed','#f1f5f9']].map(([s,label,bg]) => (
+            <div key={s} className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded" style={{ background: bg, boxShadow: s === 'grey' ? 'inset 0 0 0 1.5px #cbd5e1' : 'none' }} />
+              <span className="text-xs font-medium text-foreground">{label}</span>
             </div>
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0 ml-4">
+          {open ? <><ChevronUp className="w-3.5 h-3.5" /> Hide guide</> : <><ChevronDown className="w-3.5 h-3.5" /> Show guide</>}
+        </span>
+      </button>
+      {open && (
+        <div className="px-5 pb-4 pt-1 border-t border-border space-y-2">
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+            <span><span className="font-semibold text-foreground">✓ / ✗</span> = Pass / Fail (binary skills)</span>
+            <span><span className="font-semibold text-foreground">0–4</span> = Proficiency level (levelled skills)</span>
+            <span><span className="font-semibold text-foreground">—</span> = Not yet assessed</span>
           </div>
-        ))}
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-border" />
-
-      {/* Cell value reference row */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
-          Cell value
-        </span>
-        <span className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">✓</span> / <span className="font-semibold text-foreground">✗</span> = Pass / Fail (binary skills)
-        </span>
-        <span className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">0–4</span> = Proficiency level (levelled skills)
-          <span className="ml-2 text-muted-foreground/70">· 0 Not trained · 1 Awareness · 2 Working knowledge · 3 Competent · 4 Expert</span>
-        </span>
-        <span className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">—</span> = Not yet assessed
-        </span>
-      </div>
+          <div className="text-xs text-muted-foreground">Levels: 0 Not trained · 1 Awareness · 2 Working knowledge · 3 Competent · 4 Expert</div>
+        </div>
+      )}
     </div>
   );
 }

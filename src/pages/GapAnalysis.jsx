@@ -239,13 +239,13 @@ export default function GapAnalysis() {
           onAction={() => navigate('/teams')}
         />
       ) : (
-        <div className={`grid grid-cols-1 gap-6 ${resolvedSelectedSkill ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Skill Coverage */}
+          {/* Skill Coverage — always visible */}
           <div className="bg-card border border-border rounded-xl">
             <div className="px-5 py-4 border-b border-border">
               <h2 className="text-base font-semibold">Skill Coverage</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Click a skill to drill down</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Click a skill to drill down into who has/hasn't completed it</p>
             </div>
             {skillCoverage.length === 0 ? (
               <p className="p-5 text-sm text-muted-foreground text-center">No skills match the current filters.</p>
@@ -278,7 +278,7 @@ export default function GapAnalysis() {
                           const count = item.profCounts[level] || 0;
                           if (count === 0) return null;
                           return (
-                            <span key={level} className="text-xs bg-muted rounded px-1.5 py-0.5 text-muted-foreground">
+                            <span key={level} className="text-[10px] bg-muted rounded px-1.5 py-0.5 text-muted-foreground">
                               L{level}: {count}
                             </span>
                           );
@@ -291,17 +291,15 @@ export default function GapAnalysis() {
             )}
           </div>
 
-          {/* Skill Drill-Down panel */}
-          {resolvedSelectedSkill && (
+          {/* Right panel: Drill-Down OR Individual Status */}
+          {resolvedSelectedSkill ? (
             <SkillDrillDown
               skillItem={resolvedSelectedSkill}
               teamMembers={teamMembers}
               currentAssessments={currentAssessments}
               onClose={() => setSelectedSkillItem(null)}
             />
-          )}
-
-          {/* Individual Status */}
+          ) : (
           <div className="bg-card border border-border rounded-xl">
             <div className="px-5 py-4 border-b border-border">
               <h2 className="text-base font-semibold">Individual Status</h2>
@@ -347,6 +345,7 @@ export default function GapAnalysis() {
               </div>
             )}
           </div>
+          )}
         </div>
       )}
     </div>
