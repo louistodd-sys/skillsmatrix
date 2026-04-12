@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, UserCog, Pencil, Loader2, Clock, AlertTriangle } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { base44 } from '@/api/base44Client';
@@ -53,6 +53,7 @@ function ComplianceRing({ pct }) {
 // ─── Main component ────────────────────────────────────────────────────────
 export default function UserProfile() {
   const { userId }                    = useParams();
+  const navigate                      = useNavigate();
   const { org, user: currentUser }    = useOrganisation();
   const [profileUser, setProfileUser] = useState(null);
   const [isManagedMember, setIsManagedMember] = useState(false);
@@ -166,7 +167,7 @@ export default function UserProfile() {
       detail: JSON.stringify({ name_at_deletion: profileUser?.full_name }),
     });
     setShowDeleteModal(false);
-    window.location.href = '/users';
+    navigate('/users');
   };
 
   if (loading) return <div className="h-64 rounded-xl bg-muted animate-pulse" />;

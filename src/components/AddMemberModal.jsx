@@ -15,7 +15,7 @@ export default function AddMemberModal({ teamId, orgId, existingMemberIds, onClo
 
   const available = users.filter(u =>
     !existingMemberIds.includes(u.id) &&
-    u.status === 'active' &&
+    (!u.status || u.status === 'active') &&
     (!search || u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()))
   );
 
