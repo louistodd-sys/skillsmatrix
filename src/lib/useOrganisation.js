@@ -18,16 +18,20 @@ export default function useOrganisation() {
     }
 
     async function load() {
-      const me = await base44.auth.me();
-      cachedUser = me;
-      setUser(me);
+      try {
+        const me = await base44.auth.me();
+        cachedUser = me;
+        setUser(me);
 
-      if (me.organisation_id) {
-        const orgs = await base44.entities.Organisation.filter({ id: me.organisation_id });
-        if (orgs.length > 0) {
-          cachedOrg = orgs[0];
-          setOrg(orgs[0]);
+        if (me?.organisation_id) {
+          const orgs = await base44.entities.Organisation.filter({ id: me.organisation_id });
+          if (orgs.length > 0) {
+            cachedOrg = orgs[0];
+            setOrg(orgs[0]);
+          }
         }
+      } catch (_) {
+        // Not authenticated — AuthContext will handle redirect to login
       }
       setLoading(false);
     }
