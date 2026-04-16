@@ -43,6 +43,51 @@
       "type": "number",
       "title": "Current Onboarding Step",
       "default": 1
+    },
+    "subscription_tier": {
+      "type": "string",
+      "title": "Subscription Tier",
+      "enum": [
+        "free",
+        "starter",
+        "growth",
+        "scale"
+      ],
+      "default": "free"
+    },
+    "billing_interval": {
+      "type": "string",
+      "title": "Billing Interval",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "default": "monthly"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "title": "Stripe Customer ID"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "title": "Stripe Subscription ID"
+    },
+    "stripe_subscription_status": {
+      "type": "string",
+      "title": "Stripe Subscription Status"
+    },
+    "current_period_end": {
+      "type": "string",
+      "title": "Current Period End (ISO date)"
+    },
+    "trial_end_date": {
+      "type": "string",
+      "title": "Trial End Date (ISO date)"
+    },
+    "trial_email_sent": {
+      "type": "boolean",
+      "title": "Trial Ending Email Sent",
+      "default": false
     }
   },
   "required": [
