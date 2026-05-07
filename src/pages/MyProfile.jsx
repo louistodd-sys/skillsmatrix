@@ -40,7 +40,7 @@ export default function MyProfile() {
   }
 
   // GDPR Subject Access Request export — includes ALL data held about the user
-  const exportData = () => {
+  const exportData = async () => {
     const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const toCSV  = (rows) => rows.map(r => r.map(escape).join(',')).join('\n');
 
@@ -93,6 +93,18 @@ export default function MyProfile() {
 
     download(profileRows,    `${name}-profile-${date}.csv`);
     download(assessmentRows, `${name}-assessments-${date}.csv`);
+
+    // GDPR Article 15 — audit log entry for every personal data export
+    await base44.entities.AuditLogEntry.create({
+      organisation_id: org.id,
+      actor_user_id: user.id,
+      actor_display: user.full_name,
+      action: 'data.subject_access_export',
+      target_type: 'user',
+      target_id: user.id,
+      target_display: user.full_name,
+      detail: JSON.stringify({ files: [`${name}-profile-${date}.csv`, `${name}-assessments-${date}.csv`] }),
+    }).catch(() => {});
   };
 
   if (loading) return <div className="h-64 rounded-xl bg-muted animate-pulse" />;

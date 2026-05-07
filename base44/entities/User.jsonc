@@ -24,5 +24,8 @@
       ],
       "default": "active"
     }
-  }
+  },
+  "required": [
+    "organisation_id"
+  ]
 }

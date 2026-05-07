@@ -49,8 +49,9 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { resource, organisation_id } = await req.json();
-  const orgId = organisation_id || user.organisation_id;
+  const { resource } = await req.json();
+  // Always derive orgId from the authenticated user — never trust client-supplied organisation_id
+  const orgId = user.organisation_id;
   if (!orgId) return Response.json({ error: 'No organisation' }, { status: 400 });
 
   const orgs = await base44.entities.Organisation.filter({ id: orgId });

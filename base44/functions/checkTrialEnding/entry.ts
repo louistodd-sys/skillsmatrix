@@ -33,28 +33,28 @@ Deno.serve(async (req) => {
 
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: adminUser.email,
-        from_name: 'SkillsMatrix',
+        from_name: 'Skills Matrix App',
         subject: `Your free trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
         body: `
 Hi ${adminUser.full_name},
 
-Your SkillsMatrix free trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}.
+Your Skills Matrix App free trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}.
 
-To keep access to all your data and continue using SkillsMatrix without interruption, add your payment details before your trial ends.
+To keep access to all your data and continue using Skills Matrix App without interruption, add your payment details before your trial ends.
 
 Choose a plan:
-• Starter — £29/month (or £288/year) — Up to 30 employees, gap analysis, CSV export
-• Growth — £59/month (or £588/year) — Up to 100 employees, employee portal, PDF reports
-• Scale — £119/month (or £1,188/year) — Up to 250 employees, site views, advanced analytics
+• Starter — £39/month (or £390/year) — Up to 30 employees, gap analysis, CSV export
+• Growth — £79/month (or £790/year) — Up to 100 employees, employee portal, PDF reports
+• Scale — £149/month (or £1,490/year) — Up to 250 employees, site views, advanced analytics
 
-Upgrade now: ${org.slug ? `https://skillsmatrix.io` : 'https://skillsmatrix.io'}/settings
+Upgrade now: https://skillsmatrixapp.com/settings
 
 If you decide not to continue, your account will downgrade to the Free plan automatically.
 
 Questions? Just reply to this email.
 
 Best,
-The SkillsMatrix Team
+The Skills Matrix App Team
         `.trim(),
       });
 

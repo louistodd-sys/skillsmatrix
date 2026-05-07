@@ -9,12 +9,12 @@ Deno.serve(async (req) => {
 
   await base44.integrations.Core.SendEmail({
     to: user_email,
-    from_name: 'SkillsMatrix',
-    subject: `Welcome to SkillsMatrix, ${user_name}!`,
+    from_name: 'Skills Matrix App',
+    subject: `Welcome to Skills Matrix App, ${user_name}!`,
     body: `
 Hi ${user_name},
 
-Welcome to SkillsMatrix! 🎉
+Welcome to Skills Matrix App! 🎉
 
 Your organisation "${org_name}" is all set up and ready to go.
 
@@ -24,12 +24,12 @@ Here's what you can do next:
 • Set up teams and assign required skills
 • Start assessing your team's proficiency levels
 
-Get started: ${req.headers.get('origin') || 'https://skillsmatrix.io'}
+Get started: ${req.headers.get('origin') || 'https://skillsmatrixapp.com'}
 
 If you have any questions, reply to this email — we're here to help.
 
 Best,
-The SkillsMatrix Team
+The Skills Matrix App Team
     `.trim(),
   });
 

@@ -250,10 +250,10 @@ export default function Settings() {
   };
 
   const handleDeleteOrg = async () => {
-    // In v1, direct org deletion is complex; redirect to support with context
-    // The modal confirms intent — actual deletion requires server-side cascade
-    alert('Organisation deletion request submitted. Our team will process this within 72 hours and confirm via email.');
-    setShowDeleteOrg(false);
+    const res = await base44.functions.invoke('deleteOrganisation', {});
+    if (res.data?.deleted) {
+      base44.auth.logout('/');
+    }
   };
 
   if (!org) return null;

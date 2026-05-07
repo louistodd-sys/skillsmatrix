@@ -93,5 +93,76 @@ Deno.serve(async (req) => {
     }
   }
 
+  else if (event.type === 'customer.subscription.trial_will_end') {
+    // Fires 3 days before trial ends
+    const sub = event.data.object;
+    const org = await getOrgFromSub(sub);
+    if (!org) return new Response('OK', { status: 200 });
+
+    const users = await base44.asServiceRole.entities.User.filter({ organisation_id: org.id, role: 'admin' });
+    if (!users.length) return new Response('OK', { status: 200 });
+
+    const adminUser = users[0];
+    const trialEndDate = sub.trial_end ? new Date(sub.trial_end * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'soon';
+
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: adminUser.email,
+      from_name: 'Skills Matrix App',
+      subject: 'Your Skills Matrix App trial ends in 3 days',
+      body: `
+Hi ${adminUser.full_name},
+
+Your free trial of Skills Matrix App ends on ${trialEndDate}.
+
+To continue without interruption, add your payment details before your trial expires.
+
+Manage your subscription: https://skillsmatrixapp.com/settings?tab=billing
+
+If you have any questions, just reply to this email.
+
+Best,
+The Skills Matrix App Team
+      `.trim(),
+    });
+  }
+
+  else if (event.type === 'invoice.paid') {
+    const invoice = event.data.object;
+    const orgId = invoice.subscription ? 
+      (await stripe.subscriptions.retrieve(invoice.subscription))?.metadata?.organisation_id : null;
+    if (!orgId) return new Response('OK', { status: 200 });
+
+    const orgs = await base44.asServiceRole.entities.Organisation.filter({ id: orgId });
+    if (!orgs.length) return new Response('OK', { status: 200 });
+    const org = orgs[0];
+
+    const users = await base44.asServiceRole.entities.User.filter({ organisation_id: orgId, role: 'admin' });
+    if (!users.length) return new Response('OK', { status: 200 });
+
+    const adminUser = users[0];
+    const amount = invoice.amount_paid ? `£${(invoice.amount_paid / 100).toFixed(2)}` : 'your subscription';
+    const invoiceUrl = invoice.hosted_invoice_url || null;
+
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: adminUser.email,
+      from_name: 'Skills Matrix App',
+      subject: 'Payment confirmed — Skills Matrix App',
+      body: `
+Hi ${adminUser.full_name},
+
+Your payment of ${amount} for Skills Matrix App has been received. Thank you!
+
+${invoiceUrl ? `View your invoice: ${invoiceUrl}` : ''}
+
+Your subscription is active and your team's access continues uninterrupted.
+
+If you have any billing questions, reply to this email.
+
+Best,
+The Skills Matrix App Team
+      `.trim(),
+    });
+  }
+
   return new Response('OK', { status: 200 });
 });

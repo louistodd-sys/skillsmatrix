@@ -19,6 +19,11 @@ import Settings from './pages/Settings';
 import MyProfile from './pages/MyProfile';
 import Onboarding from './pages/Onboarding';
 import People from './pages/People';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CookiePolicy from './pages/CookiePolicy';
+import DataProcessingAgreement from './pages/DataProcessingAgreement';
+import CookieConsentBanner from './components/CookieConsentBanner';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -45,24 +50,32 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/matrix" element={<SkillsMatrix />} />
-        <Route path="/gap-analysis" element={<GapAnalysis />} />
-        <Route path="/teams" element={<Teams />} />
-        <Route path="/teams/:teamId" element={<TeamDetail />} />
-        <Route path="/people" element={<People />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/users/:userId" element={<UserProfile />} />
-        <Route path="/skills-library" element={<SkillsLibrary />} />
-        <Route path="/audit-log" element={<AuditLog />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/my-profile" element={<MyProfile />} />
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/onboarding" element={<Onboarding />} />
+        {/* Legal pages — accessible without sidebar layout */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/cookies" element={<CookiePolicy />} />
+        <Route path="/dpa" element={<DataProcessingAgreement />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/matrix" element={<SkillsMatrix />} />
+          <Route path="/gap-analysis" element={<GapAnalysis />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/:teamId" element={<TeamDetail />} />
+          <Route path="/people" element={<People />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/users/:userId" element={<UserProfile />} />
+          <Route path="/skills-library" element={<SkillsLibrary />} />
+          <Route path="/audit-log" element={<AuditLog />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/my-profile" element={<MyProfile />} />
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+      <CookieConsentBanner />
+    </>
   );
 };
 

@@ -97,9 +97,9 @@ export const TIER_FEATURES = {
 
 export const TIER_PRICING = {
   free:    { monthly: 0,   annual: 0    },
-  starter: { monthly: 29,  annual: 288  },
-  growth:  { monthly: 59,  annual: 588  },
-  scale:   { monthly: 119, annual: 1188 },
+  starter: { monthly: 39,  annual: 390  },
+  growth:  { monthly: 79,  annual: 790  },
+  scale:   { monthly: 149, annual: 1490 },
 };
 
 // ── Upgrade prompt scenarios (Section 5 of spec) ──────────────────────────────

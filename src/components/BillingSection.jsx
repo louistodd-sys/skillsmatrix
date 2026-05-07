@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, CreditCard, Download, Loader2, Check, ExternalLink } from 'lucide-react';
+import { TrendingUp, CreditCard, Download, Loader2, Check, ExternalLink, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { TIER_LABELS, TIER_PRICING, TIER_LIMITS, TIER_FEATURES } from '@/lib/tierConfig';
@@ -16,6 +16,7 @@ const TIER_COLORS = {
 export default function BillingSection({ org }) {
   const [billingInterval, setBillingInterval] = useState('annual');
   const [loadingTier, setLoadingTier] = useState(null);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
 
@@ -36,6 +37,15 @@ export default function BillingSection({ org }) {
       .catch(() => setInvoices([]))
       .finally(() => setInvoicesLoading(false));
   }, []);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    const res = await base44.functions.invoke('stripePortal', {});
+    if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
+    setPortalLoading(false);
+  };
 
   const handleUpgrade = async (tier) => {
     if (tier === 'free') return;
@@ -78,6 +88,19 @@ export default function BillingSection({ org }) {
             <p className="text-xs text-muted-foreground mt-1">Renews {renewalDate}</p>
           )}
         </div>
+        {org?.stripe_customer_id && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManageSubscription}
+            disabled={portalLoading}
+          >
+            {portalLoading
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <><Settings className="w-3.5 h-3.5 mr-1.5" /> Manage / Cancel Subscription</>
+            }
+          </Button>
+        )}
       </div>
 
       {/* Billing interval toggle */}
@@ -122,8 +145,9 @@ export default function BillingSection({ org }) {
               <div>
                 <span className="text-2xl font-bold">£{billingInterval === 'annual' ? Math.round(price / 12) : price}</span>
                 <span className="text-xs text-muted-foreground">/mo</span>
+                <span className="text-xs text-muted-foreground ml-1">(+ VAT)</span>
                 {billingInterval === 'annual' && (
-                  <p className="text-xs text-muted-foreground">billed £{price}/year</p>
+                  <p className="text-xs text-muted-foreground">billed £{price}/year + VAT</p>
                 )}
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground">

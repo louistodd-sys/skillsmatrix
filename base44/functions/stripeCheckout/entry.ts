@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
     mode: 'subscription',
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
+    automatic_tax: { enabled: true },
     subscription_data: {
       trial_period_days: 14,
       trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },

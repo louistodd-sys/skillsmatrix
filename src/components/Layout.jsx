@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import SiteFooter from '@/components/SiteFooter';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Grid3X3, BarChart3, Users, Users2, FolderKanban,
@@ -81,7 +82,7 @@ const pageTitles = {
 function getPageTitle(pathname) {
   if (pathname.startsWith('/teams/'))  return 'Team Detail';
   if (pathname.startsWith('/users/'))  return 'User Profile';
-  return pageTitles[pathname] || 'SkillsMatrix';
+  return pageTitles[pathname] || 'Skills Matrix App';
 }
 
 // ─── Sidebar nav item ────────────────────────────────────────────────────
@@ -195,7 +196,7 @@ export default function Layout() {
             )}
             <div className="min-w-0">
               <span className="font-jakarta font-700 text-white text-[15px] tracking-tight truncate block leading-tight">
-                {org?.name || 'SkillsMatrix'}
+                {org?.name || 'Skills Matrix App'}
               </span>
               <span className="text-[11px] text-sidebar-foreground/60 font-medium tracking-wide uppercase">
                 Skills Intelligence
@@ -303,6 +304,7 @@ export default function Layout() {
           <div className="w-full px-4 lg:px-6 py-6 animate-fade-in">
             <Outlet />
           </div>
+          <SiteFooter />
         </main>
       </div>
 
