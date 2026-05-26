@@ -88,9 +88,67 @@
       "type": "boolean",
       "title": "Trial Ending Email Sent",
       "default": false
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "skills_matrix",
+          "brc_compliance"
+        ]
+      },
+      "title": "Enabled Modules",
+      "default": [
+        "skills_matrix"
+      ]
+    },
+    "brc_standard": {
+      "type": "string",
+      "title": "BRC Standard",
+      "enum": [
+        "brcgs_packaging",
+        "brcgs_food",
+        "brcgs_storage",
+        "brcgs_agents_brokers",
+        "brcgs_consumer_products"
+      ]
+    },
+    "brc_audit_target_date": {
+      "type": "string",
+      "title": "BRC Audit Target Date (ISO date)"
+    },
+    "brc_module_enabled_at": {
+      "type": "string",
+      "title": "BRC Module Enabled At (ISO datetime)"
+    },
+    "brc_readiness_score": {
+      "type": "object",
+      "title": "BRC Readiness Score (cached)",
+      "properties": {
+        "overall_percent": {
+          "type": "number"
+        },
+        "red_count": {
+          "type": "number"
+        },
+        "amber_count": {
+          "type": "number"
+        },
+        "green_count": {
+          "type": "number"
+        },
+        "by_section": {
+          "type": "object"
+        },
+        "computed_at": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [
-    "name"
+    "name",
+    "modules"
   ]
 }

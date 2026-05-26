@@ -24,6 +24,25 @@ import TermsOfService from './pages/TermsOfService';
 import CookiePolicy from './pages/CookiePolicy';
 import DataProcessingAgreement from './pages/DataProcessingAgreement';
 import CookieConsentBanner from './components/CookieConsentBanner';
+import UpgradeBrc from './pages/UpgradeBrc';
+import BrcDashboard from './pages/brc/BrcDashboard';
+import BrcClauses from './pages/brc/BrcClauses';
+import BrcClauseDetail from './pages/brc/BrcClauseDetail';
+import BrcDocuments from './pages/brc/BrcDocuments';
+import BrcSettings from './pages/brc/BrcSettings';
+import {
+  BrcAudits, BrcAuditDetail,
+  BrcNonConformances, BrcNonConformanceDetail,
+  BrcCapas,
+  BrcSuppliers, BrcSupplierDetail,
+  BrcCalibration, BrcCalibrationDetail,
+  BrcComplaints, BrcComplaintDetail,
+  BrcManagementReview,
+  BrcGlassRegister,
+  BrcPestControl,
+  BrcTraining,
+  BrcDocumentDetail,
+} from './pages/brc/BrcStub';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -72,6 +91,35 @@ const AuthenticatedApp = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/my-profile" element={<MyProfile />} />
         </Route>
+        {/* BRC upgrade page — visible to Skills-Matrix-only orgs */}
+        <Route path="/upgrade-brc" element={<UpgradeBrc />} />
+
+        {/* BRC Compliance Readiness routes */}
+        <Route element={<Layout />}>
+          <Route path="/brc"                                  element={<BrcDashboard />} />
+          <Route path="/brc/clauses"                          element={<BrcClauses />} />
+          <Route path="/brc/clauses/:clauseId"                element={<BrcClauseDetail />} />
+          <Route path="/brc/documents"                        element={<BrcDocuments />} />
+          <Route path="/brc/documents/new"                    element={<BrcDocumentDetail />} />
+          <Route path="/brc/documents/:documentId"            element={<BrcDocumentDetail />} />
+          <Route path="/brc/audits"                           element={<BrcAudits />} />
+          <Route path="/brc/audits/:auditId"                  element={<BrcAuditDetail />} />
+          <Route path="/brc/non-conformances"                 element={<BrcNonConformances />} />
+          <Route path="/brc/non-conformances/:ncId"           element={<BrcNonConformanceDetail />} />
+          <Route path="/brc/capas"                            element={<BrcCapas />} />
+          <Route path="/brc/suppliers"                        element={<BrcSuppliers />} />
+          <Route path="/brc/suppliers/:supplierId"            element={<BrcSupplierDetail />} />
+          <Route path="/brc/calibration"                      element={<BrcCalibration />} />
+          <Route path="/brc/calibration/:recordId"            element={<BrcCalibrationDetail />} />
+          <Route path="/brc/complaints"                       element={<BrcComplaints />} />
+          <Route path="/brc/complaints/:complaintId"          element={<BrcComplaintDetail />} />
+          <Route path="/brc/management-review"                element={<BrcManagementReview />} />
+          <Route path="/brc/glass-register"                   element={<BrcGlassRegister />} />
+          <Route path="/brc/pest-control"                     element={<BrcPestControl />} />
+          <Route path="/brc/training"                         element={<BrcTraining />} />
+          <Route path="/brc/settings"                         element={<BrcSettings />} />
+        </Route>
+
         <Route path="*" element={<PageNotFound />} />
       </Routes>
       <CookieConsentBanner />

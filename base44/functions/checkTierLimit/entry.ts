@@ -44,12 +44,23 @@ const UPGRADE_PROMPTS = {
   },
 };
 
+// Storage quota in bytes per tier (Section 2.2)
+const STORAGE_QUOTA_BYTES = {
+  free:    100  * 1024 * 1024,
+  starter: 2    * 1024 * 1024 * 1024,
+  growth:  10   * 1024 * 1024 * 1024,
+  scale:   50   * 1024 * 1024 * 1024,
+};
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { resource } = await req.json();
+  // module is optional — defaults to "skills_matrix" for all existing call sites
+  const { resource, module: requestedModule } = await req.json();
+  const module = requestedModule || 'skills_matrix';
+
   // Always derive orgId from the authenticated user — never trust client-supplied organisation_id
   const orgId = user.organisation_id;
   if (!orgId) return Response.json({ error: 'No organisation' }, { status: 400 });
@@ -59,6 +70,23 @@ Deno.serve(async (req) => {
 
   const org = orgs[0];
   const tier = org.subscription_tier || 'free';
+
+  // ── Phase 1.3: Module entitlement gate ──────────────────────────────────────
+  const orgModules = Array.isArray(org.modules) ? org.modules : ['skills_matrix'];
+  if (!orgModules.includes(module)) {
+    return Response.json({
+      allowed: false,
+      has_limit: true,
+      current_limit: 0,
+      exceeds: true,
+      reason: 'module_not_entitled',
+      upgrade_prompt: {
+        target: 'BRC Compliance Module',
+        message: `Your organisation does not have access to the ${module === 'brc_compliance' ? 'BRC Compliance' : module} module.`,
+        unlocks: ['BRC Compliance Readiness module'],
+      },
+    });
+  }
   const limits = TIER_LIMITS[tier];
 
   // Count the relevant resource
@@ -104,6 +132,14 @@ Deno.serve(async (req) => {
       return Response.json({ allowed: false, upgrade_prompt: UPGRADE_PROMPTS.site_level_views[tier] || null });
     }
     return Response.json({ allowed: true });
+  } else if (resource === 'evidence_storage_mb') {
+    const quotaBytes = STORAGE_QUOTA_BYTES[tier] ?? STORAGE_QUOTA_BYTES.free;
+    const existingFiles = await base44.entities.EvidenceFile.filter({ organisation_id: orgId, is_redacted: false });
+    const usedBytes = existingFiles.reduce((sum, f) => sum + (f.size_bytes || 0), 0);
+    const quotaMB = Math.round(quotaBytes / (1024 * 1024));
+    const usedMB  = Math.round(usedBytes  / (1024 * 1024));
+    const allowed = usedBytes < quotaBytes;
+    return Response.json({ allowed, current: usedMB, limit: quotaMB, used_bytes: usedBytes, quota_bytes: quotaBytes });
   }
 
   const limit = limits[resource === 'employee' ? 'employees' : resource === 'skill' ? 'skills' : resource === 'category' ? 'categories' : resource === 'manager_seat' ? 'manager_seats' : 'admin_seats'];

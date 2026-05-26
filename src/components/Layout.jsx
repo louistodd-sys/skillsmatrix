@@ -3,12 +3,16 @@ import SiteFooter from '@/components/SiteFooter';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Grid3X3, BarChart3, Users, Users2, FolderKanban,
-  BookOpen, ScrollText, Settings, Bell, Menu, X, LogOut, ChevronRight,
+  BookOpen, ScrollText, Settings, Bell, Menu, X, LogOut,
+  ShieldCheck, FileText, ClipboardList, AlertTriangle, Truck,
+  Wrench, MessageSquare, FlaskConical, Bug, GraduationCap,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import useOrganisation from '@/lib/useOrganisation';
 import NotificationCenter from '@/components/NotificationCenter';
+import ModuleSwitcher from '@/components/ModuleSwitcher';
+import { hasBrcModule, hasSkillsMatrixModule, hasMultipleModules, MODULE_SKILLS_MATRIX, MODULE_BRC_COMPLIANCE } from '@/lib/brcModuleGuard';
 
 // ─── Navigation definitions ───────────────────────────────────────────────
 const adminNav = [
@@ -65,23 +69,82 @@ const viewerNav = [
   },
 ];
 
+// ─── BRC nav (admin/quality_manager) ───────────────────────────────────────
+const brcAdminNav = [
+  {
+    section: 'Compliance',
+    items: [
+      { label: 'BRC Dashboard',      icon: ShieldCheck,    path: '/brc' },
+      { label: 'Clause Mapping',     icon: ClipboardList,  path: '/brc/clauses' },
+      { label: 'Documents',          icon: FileText,       path: '/brc/documents' },
+    ],
+  },
+  {
+    section: 'Workflows',
+    items: [
+      { label: 'Internal Audits',    icon: ScrollText,     path: '/brc/audits' },
+      { label: 'Non-Conformances',   icon: AlertTriangle,  path: '/brc/non-conformances' },
+      { label: 'CAPAs',              icon: ClipboardList,  path: '/brc/capas' },
+      { label: 'Complaints',         icon: MessageSquare,  path: '/brc/complaints' },
+    ],
+  },
+  {
+    section: 'Registers',
+    items: [
+      { label: 'Suppliers',          icon: Truck,          path: '/brc/suppliers' },
+      { label: 'Calibration',        icon: Wrench,         path: '/brc/calibration' },
+      { label: 'Glass Register',     icon: FlaskConical,   path: '/brc/glass-register' },
+      { label: 'Pest Control',       icon: Bug,            path: '/brc/pest-control' },
+      { label: 'Training',           icon: GraduationCap,  path: '/brc/training' },
+    ],
+  },
+  {
+    section: 'Settings',
+    items: [
+      { label: 'Mgmt Review',        icon: Users2,         path: '/brc/management-review' },
+      { label: 'BRC Settings',       icon: Settings,       path: '/brc/settings' },
+    ],
+  },
+];
+
 // Page title map for the header
 const pageTitles = {
-  '/':              'Dashboard',
-  '/matrix':        'Skills Matrix',
-  '/gap-analysis':  'Gap Analysis',
-  '/teams':         'Teams',
-  '/people':        'People',
-  '/users':         'Users',
-  '/skills-library':'Skills Library',
-  '/audit-log':     'Audit Log',
-  '/settings':      'Settings',
-  '/my-profile':    'My Skills',
+  '/':                       'Dashboard',
+  '/matrix':                 'Skills Matrix',
+  '/gap-analysis':           'Gap Analysis',
+  '/teams':                  'Teams',
+  '/people':                 'People',
+  '/users':                  'Users',
+  '/skills-library':         'Skills Library',
+  '/audit-log':              'Audit Log',
+  '/settings':               'Settings',
+  '/my-profile':             'My Skills',
+  '/brc':                    'BRC Dashboard',
+  '/brc/clauses':            'Clause Mapping',
+  '/brc/documents':          'Document Control',
+  '/brc/audits':             'Internal Audits',
+  '/brc/non-conformances':   'Non-Conformances',
+  '/brc/capas':              'CAPA Register',
+  '/brc/suppliers':          'Supplier Register',
+  '/brc/calibration':        'Calibration Register',
+  '/brc/complaints':         'Complaint Register',
+  '/brc/management-review':  'Management Review',
+  '/brc/glass-register':     'Glass Register',
+  '/brc/pest-control':       'Pest Control',
+  '/brc/training':           'Training Register',
+  '/brc/settings':           'BRC Settings',
 };
 
 function getPageTitle(pathname) {
-  if (pathname.startsWith('/teams/'))  return 'Team Detail';
-  if (pathname.startsWith('/users/'))  return 'User Profile';
+  if (pathname.startsWith('/teams/'))           return 'Team Detail';
+  if (pathname.startsWith('/users/'))           return 'User Profile';
+  if (pathname.startsWith('/brc/clauses/'))     return 'Clause Detail';
+  if (pathname.startsWith('/brc/documents/'))   return 'Document Detail';
+  if (pathname.startsWith('/brc/audits/'))      return 'Audit Detail';
+  if (pathname.startsWith('/brc/non-conformances/')) return 'NC Detail';
+  if (pathname.startsWith('/brc/suppliers/'))   return 'Supplier Detail';
+  if (pathname.startsWith('/brc/calibration/')) return 'Calibration Record';
+  if (pathname.startsWith('/brc/complaints/'))  return 'Complaint Detail';
   return pageTitles[pathname] || 'Skills Matrix App';
 }
 
@@ -120,8 +183,36 @@ export default function Layout() {
   const location = useLocation();
   const { org, user } = useOrganisation();
 
-  const role     = user?.role || 'viewer';
-  const navGroups = role === 'admin' ? adminNav : role === 'manager' ? managerNav : viewerNav;
+  const role = user?.role || 'viewer';
+
+  // ── Module switcher state (Section 3.1) ───────────────────────────────
+  const isBrcRoute = location.pathname.startsWith('/brc');
+  const defaultModule = isBrcRoute && hasBrcModule(org) ? MODULE_BRC_COMPLIANCE : MODULE_SKILLS_MATRIX;
+  const [activeModule, setActiveModule] = useState(() => {
+    const stored = sessionStorage.getItem('activeModule');
+    // Validate stored value is still entitled
+    return stored || defaultModule;
+  });
+
+  // Keep activeModule in sync when route changes
+  useEffect(() => {
+    if (isBrcRoute && hasBrcModule(org)) {
+      setActiveModule(MODULE_BRC_COMPLIANCE);
+    }
+  }, [isBrcRoute, org]);
+
+  const handleModuleSwitch = (mod) => {
+    setActiveModule(mod);
+    sessionStorage.setItem('activeModule', mod);
+  };
+
+  // Determine which nav to show based on active module + role
+  let navGroups;
+  if (activeModule === MODULE_BRC_COMPLIANCE && hasBrcModule(org)) {
+    navGroups = (role === 'admin' || role === 'quality_manager') ? brcAdminNav : viewerNav;
+  } else {
+    navGroups = role === 'admin' ? adminNav : role === 'manager' ? managerNav : viewerNav;
+  }
 
   const pageTitle = getPageTitle(location.pathname);
 
@@ -210,6 +301,9 @@ export default function Layout() {
             <X className="w-4 h-4 text-sidebar-foreground" />
           </button>
         </div>
+
+        {/* Module switcher */}
+        <ModuleSwitcher org={org} activeModule={activeModule} onSwitch={handleModuleSwitch} />
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
