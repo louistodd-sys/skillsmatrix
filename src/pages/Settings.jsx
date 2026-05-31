@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Save, Trash2, Download, Loader2, Upload, X, AlertTriangle, Users } from 'lucide-react';
 import BulkImportModal from '@/components/BulkImportModal';
 import BillingSection from '@/components/BillingSection';
+import ModuleToggleSection from '@/components/brc/ModuleToggleSection';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
@@ -396,6 +397,9 @@ export default function Settings() {
           {saving ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</> : 'Save Notification Settings'}
         </Button>
       </section>
+
+      {/* Modules */}
+      <ModuleToggleSection org={org} onModulesChanged={refreshOrg} />
 
       {/* Bulk Import */}
       <section className="bg-card border border-border rounded-xl p-5 space-y-3">
