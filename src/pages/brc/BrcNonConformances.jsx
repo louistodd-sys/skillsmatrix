@@ -4,8 +4,9 @@ import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, AlertTriangle, Search } from 'lucide-react';
+import { Plus, AlertTriangle, Search, Link2 } from 'lucide-react';
 import NCFormModal from '@/components/brc/NCFormModal';
+import ClausePickerModal from '@/components/brc/ClausePickerModal';
 
 const SEV_CFG = {
   observation: { bg: 'bg-gray-100',  text: 'text-gray-600'  },
@@ -29,6 +30,7 @@ function BrcNCContent() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [clausePicker, setClausePicker] = useState(null);
 
   const load = () => {
     if (!org) return;
@@ -124,7 +126,12 @@ function BrcNCContent() {
                     <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{n.raised_date || '—'}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{n.due_date || '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => { setEditing(n); setShowModal(true); }} className="text-primary hover:underline text-xs font-medium">Edit</button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button onClick={() => setClausePicker(n)} className="text-muted-foreground hover:text-primary transition-colors" title="Link to clause" aria-label="Link to clause">
+                          <Link2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => { setEditing(n); setShowModal(true); }} className="text-primary hover:underline text-xs font-medium">Edit</button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -140,6 +147,15 @@ function BrcNCContent() {
           nc={editing}
           onClose={() => setShowModal(false)}
           onSaved={() => { setShowModal(false); load(); }}
+        />
+      )}
+      {clausePicker && (
+        <ClausePickerModal
+          org={org}
+          entityType="BRCNonConformance"
+          recordId={clausePicker.id}
+          recordLabel={`${clausePicker.ref_number || ''} ${clausePicker.title}`}
+          onClose={() => setClausePicker(null)}
         />
       )}
     </div>
