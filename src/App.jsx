@@ -44,6 +44,7 @@ import BrcActionCentre from './pages/brc/BrcActionCentre';
 import BrcAnalytics from './pages/brc/BrcAnalytics';
 import BrcAuditChecklist from './pages/brc/BrcAuditChecklist';
 import BrcDocumentDetail from './pages/brc/BrcDocumentDetail';
+import BrcGuide from './pages/brc/BrcGuide';
 import { BrcAuditDetail, BrcNonConformanceDetail, BrcSupplierDetail, BrcCalibrationDetail, BrcComplaintDetail } from './pages/brc/BrcStub';
 
 const AuthenticatedApp = () => {
@@ -122,6 +123,7 @@ const AuthenticatedApp = () => {
           <Route path="/brc/action-centre"                    element={<BrcActionCentre />} />
           <Route path="/brc/analytics"                        element={<BrcAnalytics />} />
           <Route path="/brc/audit-checklist"                  element={<BrcAuditChecklist />} />
+          <Route path="/brc/guide"                            element={<BrcGuide />} />
           <Route path="/brc/settings"                         element={<BrcSettings />} />
         </Route>
 

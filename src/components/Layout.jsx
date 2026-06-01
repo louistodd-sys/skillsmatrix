@@ -73,6 +73,12 @@ const viewerNav = [
 // ─── BRC nav (admin/quality_manager) ───────────────────────────────────────
 const brcAdminNav = [
   {
+    section: 'Getting Started',
+    items: [
+      { label: 'Audit Guide',        icon: BookOpen,       path: '/brc/guide' },
+    ],
+  },
+  {
     section: 'Compliance',
     items: [
       { label: 'BRC Dashboard',      icon: ShieldCheck,    path: '/brc' },
@@ -139,6 +145,7 @@ const pageTitles = {
   '/brc/action-centre':      'Action Centre',
   '/brc/analytics':          'Compliance Analytics',
   '/brc/audit-checklist':    'Pre-Audit Checklist',
+  '/brc/guide':              'Audit Preparation Guide',
   '/brc/settings':           'BRC Settings',
 };
 

@@ -4,7 +4,8 @@ import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, ClipboardList, Search, CheckCircle2, Clock, ExternalLink } from 'lucide-react';
+import { Plus, ClipboardList, Search, CheckCircle2, Clock, ExternalLink, Link2 } from 'lucide-react';
+import ClausePickerModal from '@/components/brc/ClausePickerModal';
 import { Link } from 'react-router-dom';
 import CAPAFormModal from '@/components/brc/CAPAFormModal';
 
@@ -23,6 +24,7 @@ function BrcCapasContent() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [clausePicker, setClausePicker] = useState(null);
 
   const load = () => {
     if (!org) return;
@@ -103,7 +105,12 @@ function BrcCapasContent() {
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{c.due_date || '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => { setEditing(c); setShowModal(true); }} className="text-primary hover:underline text-xs font-medium">Edit</button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button onClick={() => setClausePicker(c)} className="text-muted-foreground hover:text-primary transition-colors" title="Link to clause" aria-label="Link to clause">
+                          <Link2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => { setEditing(c); setShowModal(true); }} className="text-primary hover:underline text-xs font-medium">Edit</button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -119,6 +126,15 @@ function BrcCapasContent() {
           capa={editing}
           onClose={() => setShowModal(false)}
           onSaved={() => { setShowModal(false); load(); }}
+        />
+      )}
+      {clausePicker && (
+        <ClausePickerModal
+          org={org}
+          entityType="BRCCAPA"
+          recordId={clausePicker.id}
+          recordLabel={`${clausePicker.ref_number || ''} ${clausePicker.title}`}
+          onClose={() => setClausePicker(null)}
         />
       )}
     </div>

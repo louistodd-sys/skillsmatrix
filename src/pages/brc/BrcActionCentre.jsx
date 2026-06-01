@@ -66,7 +66,7 @@ function BrcActionCentreContent() {
         icon: ClipboardList, iconBg: 'bg-red-100', iconColor: 'text-red-600',
         title: `Overdue CAPA: ${c.ref_number || c.title}`,
         subtitle: `Due ${c.due_date || 'unknown'} · ${c.responsible_name || 'Unassigned'}`,
-        linkTo: '/brc/capas', urgency: 'critical', sort: 0,
+        linkTo: `/brc/capas`, urgency: 'critical', sort: 0,
       }));
 
     // Open NCs overdue
@@ -75,7 +75,7 @@ function BrcActionCentreContent() {
         icon: AlertTriangle, iconBg: 'bg-red-100', iconColor: 'text-red-600',
         title: `Overdue NC: ${n.ref_number || n.title}`,
         subtitle: `${n.severity} · Due ${n.due_date}`,
-        linkTo: '/brc/non-conformances', urgency: 'critical', sort: 0,
+        linkTo: `/brc/non-conformances`, urgency: 'critical', sort: 0,
       }));
 
     // Calibration overdue
@@ -84,7 +84,7 @@ function BrcActionCentreContent() {
         icon: Wrench, iconBg: 'bg-red-100', iconColor: 'text-red-600',
         title: `Calibration overdue: ${r.equipment_name}`,
         subtitle: `${r.equipment_id} · Was due ${r.next_calibration_date}`,
-        linkTo: '/brc/calibration', urgency: 'critical', sort: 1,
+        linkTo: `/brc/calibration`, urgency: 'critical', sort: 1,
       }));
 
     // Calibration due soon (within 30 days)
@@ -93,7 +93,7 @@ function BrcActionCentreContent() {
         icon: Wrench, iconBg: 'bg-amber-100', iconColor: 'text-amber-700',
         title: `Calibration due soon: ${r.equipment_name}`,
         subtitle: `${r.equipment_id} · Due ${r.next_calibration_date} (${daysFrom(r.next_calibration_date)}d)`,
-        linkTo: '/brc/calibration', urgency: 'warning', sort: 2,
+        linkTo: `/brc/calibration`, urgency: 'warning', sort: 2,
       }));
 
     // Supplier reviews overdue
@@ -102,7 +102,7 @@ function BrcActionCentreContent() {
         icon: Truck, iconBg: 'bg-red-100', iconColor: 'text-red-600',
         title: `Supplier review overdue: ${s.name}`,
         subtitle: `Was due ${s.next_review_date} · ${s.approval_status}`,
-        linkTo: '/brc/suppliers', urgency: 'critical', sort: 1,
+        linkTo: `/brc/suppliers`, urgency: 'critical', sort: 1,
       }));
 
     // Supplier reviews due within 60 days
@@ -111,23 +111,23 @@ function BrcActionCentreContent() {
         icon: Truck, iconBg: 'bg-amber-100', iconColor: 'text-amber-700',
         title: `Supplier review due: ${s.name}`,
         subtitle: `Due ${s.next_review_date} (${daysFrom(s.next_review_date)}d) · ${s.approval_status}`,
-        linkTo: '/brc/suppliers', urgency: 'warning', sort: 3,
+        linkTo: `/brc/suppliers`, urgency: 'warning', sort: 3,
       }));
 
-    // Documents due for review
+    // Documents due for review — link directly to document detail
     documents.filter(d => d.next_review_date && daysFrom(d.next_review_date) < 0)
       .forEach(d => items.push({
         icon: FileText, iconBg: 'bg-red-100', iconColor: 'text-red-600',
         title: `Document review overdue: ${d.title}`,
         subtitle: `${d.doc_reference} · Was due ${d.next_review_date}`,
-        linkTo: '/brc/documents', urgency: 'critical', sort: 1,
+        linkTo: `/brc/documents/${d.id}`, urgency: 'critical', sort: 1,
       }));
     documents.filter(d => d.next_review_date && daysFrom(d.next_review_date) >= 0 && daysFrom(d.next_review_date) <= 60)
       .forEach(d => items.push({
         icon: FileText, iconBg: 'bg-amber-100', iconColor: 'text-amber-700',
         title: `Document review due: ${d.title}`,
         subtitle: `${d.doc_reference} · Due ${d.next_review_date} (${daysFrom(d.next_review_date)}d)`,
-        linkTo: '/brc/documents', urgency: 'warning', sort: 3,
+        linkTo: `/brc/documents/${d.id}`, urgency: 'warning', sort: 3,
       }));
 
     // Expiring training certs within 30 days
@@ -157,14 +157,16 @@ function BrcActionCentreContent() {
         linkTo: '/brc/complaints', urgency: 'warning', sort: 2,
       }));
 
-    // Clauses not started (fundamental)
-    statuses.filter(s => s.rag === 'red' || s.status === 'not_started').slice(0, 5)
-      .forEach(s => items.push({
+    // Clauses not started — show count summary linking to filtered view
+    const notStartedCount = statuses.filter(s => s.rag === 'red' || s.status === 'not_started').length;
+    if (notStartedCount > 0) {
+      items.push({
         icon: ScrollText, iconBg: 'bg-gray-100', iconColor: 'text-gray-600',
-        title: `Clause not started`,
-        subtitle: `Update clause status in Clause Mapping`,
+        title: `${notStartedCount} clause${notStartedCount !== 1 ? 's' : ''} not yet started`,
+        subtitle: `Open Clause Mapping and work through each section`,
         linkTo: '/brc/clauses', urgency: 'info', sort: 5,
-      }));
+      });
+    }
 
     return items
       .slice(0, 50)
