@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 // Org deletion confirmation modal
 function DeleteOrgModal({ orgName, onConfirm, onClose }) {
@@ -162,14 +163,19 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      alert('Logo must be under 2 MB.');
+      toast.error('Logo must be under 2 MB.');
       return;
     }
     setLogoUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setLogoPreview(file_url);
-    await base44.entities.Organisation.update(org.id, { logo_url: file_url });
-    await refreshOrg();
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setLogoPreview(file_url);
+      await base44.entities.Organisation.update(org.id, { logo_url: file_url });
+      await refreshOrg();
+      toast.success('Logo updated');
+    } catch {
+      toast.error('Logo upload failed — please try again.');
+    }
     setLogoUploading(false);
   };
 

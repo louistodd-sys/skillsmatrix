@@ -511,7 +511,7 @@ export default function UserProfile() {
         <EditEmployeeModal
           userId={userId}
           currentName={profileUser.full_name}
-          currentEmail={profileUser.email === '(no email)' ? '' : profileUser.email}
+          currentEmail={(!profileUser.email || profileUser.email === '(no email)') ? '' : profileUser.email}
           orgId={org.id}
           onClose={() => setShowEditEmployee(false)}
           onSaved={loadData}

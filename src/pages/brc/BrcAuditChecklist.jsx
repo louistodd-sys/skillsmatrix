@@ -306,6 +306,7 @@ function BrcAuditChecklistContent() {
         <NCFormModal
           org={org}
           nc={null}
+          clause={ncModalClause}
           onClose={() => setNcModalClause(null)}
           onSaved={() => setNcModalClause(null)}
         />

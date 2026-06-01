@@ -9,9 +9,10 @@ const SOURCES = ['internal_audit','external_audit','customer_complaint','supplie
 const SEVERITIES = ['observation','minor','major','critical'];
 const STATUSES = ['open','under_investigation','capa_raised','closed','overdue'];
 
-export default function NCFormModal({ org, nc, onClose, onSaved }) {
+export default function NCFormModal({ org, nc, clause, onClose, onSaved }) {
+  const clauseTitle = clause ? `${clause.clause_number ? `Clause ${clause.clause_number} — ` : ''}${clause.title || ''}` : '';
   const [form, setForm] = useState(nc ? { ...nc } : {
-    ref_number: '', title: '', source: 'internal_audit', severity: 'minor', status: 'open',
+    ref_number: '', title: clauseTitle, source: 'internal_audit', severity: 'minor', status: 'open',
     raised_date: new Date().toISOString().split('T')[0], due_date: '', description: '', immediate_action: '', root_cause: '',
   });
   const [saving, setSaving] = useState(false);
@@ -26,8 +27,20 @@ export default function NCFormModal({ org, nc, onClose, onSaved }) {
     setSaving(true);
     try {
       const payload = { ...form, organisation_id: org.id };
-      if (nc?.id) await base44.entities.BRCNonConformance.update(nc.id, payload);
-      else await base44.entities.BRCNonConformance.create(payload);
+      let saved;
+      if (nc?.id) {
+        saved = await base44.entities.BRCNonConformance.update(nc.id, payload);
+      } else {
+        saved = await base44.entities.BRCNonConformance.create(payload);
+        if (clause?.id && saved?.id) {
+          await base44.entities.BRCClauseEvidenceLink.create({
+            organisation_id: org.id,
+            clause_id: clause.id,
+            linked_entity_type: 'non_conformance',
+            linked_entity_id: saved.id,
+          });
+        }
+      }
       toast.success(nc ? 'Non-conformance updated' : 'Non-conformance raised');
       onSaved();
     } catch {

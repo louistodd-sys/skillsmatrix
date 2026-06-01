@@ -114,7 +114,7 @@ export default function UrgentItems({ clauses, statuses, auditTargetDate }) {
           );
         })}
       </ul>
-      {clauses.length > 10 && (
+      {urgentClauses.length > 10 && (
         <div className="px-5 py-3 border-t border-border">
           <Link to="/brc/clauses?filter=urgent" className="text-xs text-primary font-medium hover:underline">
             View all urgent clauses →
