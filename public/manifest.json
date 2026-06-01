@@ -1,0 +1,9 @@
+{
+  "name": "Skills Matrix App",
+  "short_name": "Skills Matrix",
+  "description": "Workforce skills intelligence and BRC compliance readiness platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9"
+}

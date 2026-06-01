@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { industryTemplates } from '@/lib/industryTemplates';
 import { TIER_PRICING, TIER_LIMITS } from '@/lib/tierConfig';
+import { toast } from 'sonner';
 
 const steps = [
   { icon: Building2, label: 'Organisation' },
@@ -110,16 +111,20 @@ export default function Onboarding() {
     if (!orgId) return;
     if (selectedTier !== 'free') {
       setLoading(true);
-      await base44.entities.Organisation.update(orgId, { subscription_tier: selectedTier, onboarding_step: 3 });
-      const res = await base44.functions.invoke('stripeCheckout', {
-        tier: selectedTier,
-        billing_interval: billingInterval,
-        success_url: `${window.location.origin}/onboarding?step=3`,
-        cancel_url:  `${window.location.origin}/onboarding?step=2`,
-      });
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-        return;
+      try {
+        await base44.entities.Organisation.update(orgId, { subscription_tier: selectedTier, onboarding_step: 3 });
+        const res = await base44.functions.invoke('stripeCheckout', {
+          tier: selectedTier,
+          billing_interval: billingInterval,
+          success_url: `${window.location.origin}/onboarding?step=3`,
+          cancel_url:  `${window.location.origin}/onboarding?step=2`,
+        });
+        if (res.data?.url) {
+          window.location.href = res.data.url;
+          return;
+        }
+      } catch {
+        toast.error('Could not start checkout — please try again.');
       }
       setLoading(false);
     }
@@ -131,7 +136,7 @@ export default function Onboarding() {
     setLoading(true);
     if (selectedTemplate) {
       const template = industryTemplates.find(t => t.id === selectedTemplate);
-      for (const cat of template.categories) {
+      for (const cat of (template?.categories ?? [])) {
         const newCat = await base44.entities.SkillCategory.create({
           organisation_id: orgId, name: cat.name, colour: cat.colour,
         });
@@ -165,13 +170,24 @@ export default function Onboarding() {
   const handleStep5 = async () => {
     setLoading(true);
     if (inviteEmails.trim()) {
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const emails = inviteEmails.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
+      const invalid = emails.filter(e => !emailRe.test(e));
+      if (invalid.length) {
+        toast.error(`Invalid email${invalid.length > 1 ? 's' : ''}: ${invalid.join(', ')}`);
+        setLoading(false);
+        return;
+      }
       for (const email of emails) {
-        await base44.entities.Invitation.create({
-          organisation_id: orgId, email, role: 'viewer',
-          invited_by_user_id: user?.id, invited_by_name: user?.full_name, status: 'pending',
-        });
-        await base44.users.inviteUser(email, 'user');
+        try {
+          await base44.entities.Invitation.create({
+            organisation_id: orgId, email, role: 'viewer',
+            invited_by_user_id: user?.id, invited_by_name: user?.full_name, status: 'pending',
+          });
+          await base44.users.inviteUser(email, 'user');
+        } catch {
+          toast.error(`Failed to invite ${email}`);
+        }
       }
     }
     await base44.entities.Organisation.update(orgId, { onboarding_completed: true, onboarding_step: 6 });
