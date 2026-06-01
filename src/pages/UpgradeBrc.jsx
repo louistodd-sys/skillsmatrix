@@ -29,17 +29,14 @@ const COLLABORATIVE_FEATURES = [
 
 export default function UpgradeBrc() {
   const { org } = useOrganisation();
-  const [billingInterval, setBillingInterval] = useState('monthly');
   const [loading, setLoading] = useState(false);
 
   const isEntitled = hasBrcEntitlement(org);
   const isActive   = hasBrcModule(org);
-  const price      = billingInterval === 'annual' ? BRC_PRICING.annual : BRC_PRICING.monthly;
-  const monthlyEquiv = billingInterval === 'annual' ? Math.round(BRC_PRICING.annual / 12) : BRC_PRICING.monthly;
 
   const handleSubscribe = async () => {
     setLoading(true);
-    const res = await base44.functions.invoke('stripeBrcCheckout', { billing_interval: billingInterval });
+    const res = await base44.functions.invoke('stripeBrcCheckout', {});
     if (res.data?.url) window.location.href = res.data.url;
     setLoading(false);
   };
@@ -80,32 +77,13 @@ export default function UpgradeBrc() {
         {/* Pricing */}
         {!isActive && (
           <div className="bg-card border border-border rounded-xl p-6 space-y-5">
-            <div>
-              <p className="text-sm font-semibold text-foreground mb-3">Choose billing interval</p>
-              <div className="inline-flex rounded-lg border border-border p-1 bg-muted/30">
-                <button
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${billingInterval === 'monthly' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setBillingInterval('monthly')}
-                >
-                  Monthly
-                </button>
-                <button
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors relative ${billingInterval === 'annual' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setBillingInterval('annual')}
-                >
-                  Annual
-                  <span className="ml-1.5 text-xs text-green-600 font-semibold">Save 17%</span>
-                </button>
-              </div>
-            </div>
-
             <div className="flex items-end gap-2">
-              <span className="text-4xl font-bold text-foreground">£{monthlyEquiv}</span>
-              <span className="text-muted-foreground text-sm mb-1">/mo + VAT</span>
+              <span className="text-4xl font-bold text-foreground">£{BRC_PRICING.monthly}</span>
+              <span className="text-muted-foreground text-sm mb-1">/month + VAT</span>
             </div>
-            {billingInterval === 'annual' && (
-              <p className="text-xs text-muted-foreground -mt-3">Billed £{price}/year + VAT</p>
-            )}
+            <p className="text-sm text-muted-foreground -mt-2">
+              Flat monthly rate. Cancel anytime via your Stripe billing portal.
+            </p>
 
             <Button
               size="lg"
@@ -115,10 +93,15 @@ export default function UpgradeBrc() {
             >
               {loading
                 ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <>Start 14-day free trial <ArrowRight className="w-4 h-4" /></>
+                : <>Subscribe — £{BRC_PRICING.monthly}/mo <ArrowRight className="w-4 h-4" /></>
               }
             </Button>
-            <p className="text-xs text-center text-muted-foreground">No card required during trial. Cancel anytime.</p>
+
+            {org?.stripe_customer_id && (
+              <p className="text-xs text-center text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                💡 Already subscribed to Skills Matrix? Both subscriptions share one invoice — you'll be billed together automatically.
+              </p>
+            )}
           </div>
         )}
 
@@ -127,7 +110,7 @@ export default function UpgradeBrc() {
           {FEATURES.map(({ icon: Icon, label, desc }) => (
             <div key={label} className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border shadow-card">
               <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Icon className="w-4.5 h-4.5 text-primary" />
+                <Icon className="w-4 h-4 text-primary" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">{label}</p>
@@ -164,7 +147,7 @@ export default function UpgradeBrc() {
               </Button>
             : !isEntitled && (
                 <Button size="lg" className="gap-2" onClick={handleSubscribe} disabled={loading || !org}>
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Start free trial <ArrowRight className="w-4 h-4" /></>}
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Subscribe now <ArrowRight className="w-4 h-4" /></>}
                 </Button>
               )
           }

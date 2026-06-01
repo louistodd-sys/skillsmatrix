@@ -38,7 +38,7 @@ export default function ModuleToggleSection({ org, onModulesChanged }) {
 
   const handleBrcSubscribe = async () => {
     setBrcCheckoutLoading(true);
-    const res = await base44.functions.invoke('stripeBrcCheckout', { billing_interval: 'monthly' });
+    const res = await base44.functions.invoke('stripeBrcCheckout', {});
     if (res.data?.url) window.location.href = res.data.url;
     setBrcCheckoutLoading(false);
   };
@@ -114,8 +114,7 @@ export default function ModuleToggleSection({ org, onModulesChanged }) {
                 {key === 'brc_compliance' && !enabled && !brcEntitled && (
                   <div className="mt-2 flex items-center gap-3 flex-wrap">
                     <span className="text-xs text-muted-foreground">
-                      From <span className="font-semibold text-foreground">£{BRC_PRICING.monthly}/mo</span>
-                      {' '}or <span className="font-semibold text-foreground">£{BRC_PRICING.annual}/yr</span> (+ VAT)
+                      <span className="font-semibold text-foreground">£{BRC_PRICING.monthly}/mo</span> + VAT
                     </span>
                     <Button
                       size="sm"

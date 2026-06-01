@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { industryTemplates } from '@/lib/industryTemplates';
-import { TIER_PRICING, TIER_LIMITS } from '@/lib/tierConfig';
+import { TIER_LIMITS } from '@/lib/tierConfig';
 import { toast } from 'sonner';
 
 const steps = [
@@ -23,43 +23,22 @@ const PLAN_OPTIONS = [
     tier: 'free',
     label: 'Free',
     price: '£0',
-    subtitle: 'Forever free',
-    features: ['5 employees', '15 skills', '3 categories', '1 admin seat'],
-    cta: 'Start for free',
+    features: ['Up to 10 members', '10 skills', '3 categories', '1 admin seat'],
     highlight: false,
   },
   {
-    tier: 'starter',
-    label: 'Starter',
-    price: '£29',
-    annualPrice: '£288',
-    subtitle: '/month',
-    features: ['30 employees', '50 skills', '5 categories', '2 admins + 3 managers', 'Gap analysis & CSV export'],
-    cta: 'Start 14-day free trial',
+    tier: 'essential',
+    label: 'Essential',
+    price: '£50',
+    features: ['Up to 50 members', '30 skills', 'Unlimited categories', '2 admins + unlimited managers', 'Gap analysis & CSV export', 'Employee portal'],
     highlight: false,
-    trial: true,
   },
   {
-    tier: 'growth',
-    label: 'Growth',
-    price: '£59',
-    annualPrice: '£588',
-    subtitle: '/month',
-    features: ['100 employees', 'Unlimited skills', '3 admins + unlimited managers', 'Employee portal', 'PDF reports'],
-    cta: 'Start 14-day free trial',
+    tier: 'professional',
+    label: 'Professional',
+    price: '£150',
+    features: ['Up to 500 members', 'Unlimited skills', 'Unlimited admin seats', 'PDF reports', 'Advanced analytics', 'Site-level views'],
     highlight: true,
-    trial: true,
-  },
-  {
-    tier: 'scale',
-    label: 'Scale',
-    price: '£119',
-    annualPrice: '£1,188',
-    subtitle: '/month',
-    features: ['250 employees', 'Unlimited everything', 'Advanced analytics', 'Site-level views'],
-    cta: 'Start 14-day free trial',
-    highlight: false,
-    trial: true,
   },
 ];
 
@@ -75,7 +54,6 @@ export default function Onboarding() {
 
   // Step 2 — Tier
   const [selectedTier, setSelectedTier] = useState('free');
-  const [billingInterval, setBillingInterval] = useState('annual');
 
   // Step 3 — Skills
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -115,7 +93,6 @@ export default function Onboarding() {
         await base44.entities.Organisation.update(orgId, { subscription_tier: selectedTier, onboarding_step: 3 });
         const res = await base44.functions.invoke('stripeCheckout', {
           tier: selectedTier,
-          billing_interval: billingInterval,
           success_url: `${window.location.origin}/onboarding?step=3`,
           cancel_url:  `${window.location.origin}/onboarding?step=2`,
         });
@@ -254,30 +231,12 @@ export default function Onboarding() {
                   <Zap className="w-6 h-6 text-primary" />
                 </div>
                 <h2 className="text-xl font-bold">Choose your plan</h2>
-                <p className="text-sm text-muted-foreground mt-1">Start free, or try any paid plan free for 14 days — no card required</p>
+                <p className="text-sm text-muted-foreground mt-1">Start free, or upgrade to unlock more capacity — billed monthly, cancel anytime</p>
               </div>
 
-              {/* Billing interval toggle */}
-              <div className="flex justify-center">
-                <div className="inline-flex rounded-lg border border-border p-1 bg-muted/30">
-                  <button
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${billingInterval === 'monthly' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                    onClick={() => setBillingInterval('monthly')}
-                  >Monthly</button>
-                  <button
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${billingInterval === 'annual' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                    onClick={() => setBillingInterval('annual')}
-                  >Annual <span className="text-green-600 text-xs font-semibold">Save 17%</span></button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {PLAN_OPTIONS.map(plan => {
                   const isSelected = selectedTier === plan.tier;
-                  const displayPrice = plan.tier === 'free' ? '£0' : billingInterval === 'annual'
-                    ? `£${Math.round(TIER_PRICING[plan.tier].annual / 12)}`
-                    : `£${TIER_PRICING[plan.tier].monthly}`;
-
                   return (
                     <button
                       key={plan.tier}
@@ -296,8 +255,8 @@ export default function Onboarding() {
                         {isSelected && <Check className="w-4 h-4 text-primary" />}
                       </div>
                       <div className="mb-2">
-                        <span className="text-xl font-bold">{displayPrice}</span>
-                        {plan.tier !== 'free' && <span className="text-xs text-muted-foreground">/mo{billingInterval === 'annual' ? ' billed annually' : ''}</span>}
+                        <span className="text-xl font-bold">{plan.price}</span>
+                        {plan.tier !== 'free' && <span className="text-xs text-muted-foreground">/mo + VAT</span>}
                       </div>
                       <ul className="space-y-0.5">
                         {plan.features.map((f, i) => (
@@ -306,9 +265,6 @@ export default function Onboarding() {
                           </li>
                         ))}
                       </ul>
-                      {plan.trial && (
-                        <p className="text-xs text-primary font-medium mt-2">14-day free trial, no card needed</p>
-                      )}
                     </button>
                   );
                 })}
@@ -321,7 +277,7 @@ export default function Onboarding() {
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : selectedTier === 'free'
                       ? <>Continue on Free <ArrowRight className="w-4 h-4 ml-1" /></>
-                      : <>Start {PLAN_OPTIONS.find(p => p.tier === selectedTier)?.label} Trial <ArrowRight className="w-4 h-4 ml-1" /></>
+                      : <>Subscribe to {PLAN_OPTIONS.find(p => p.tier === selectedTier)?.label} <ArrowRight className="w-4 h-4 ml-1" /></>
                   }
                 </Button>
               </div>
