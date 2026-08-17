@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, Download, Loader2, Check, Settings, ShieldCheck, ArrowRight } from 'lucide-react';
+import { TrendingUp, CreditCard, Download, Loader2, Check, ExternalLink, Settings, ShieldCheck, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { TIER_LABELS, TIER_PRICING, TIER_LIMITS, TIER_FEATURES, BRC_PRICING } from '@/lib/tierConfig';
 import { Link } from 'react-router-dom';
 
-const TIER_ORDER = ['free', 'essential', 'professional'];
+const TIER_ORDER = ['free', 'starter', 'growth', 'scale'];
 
 const TIER_COLORS = {
-  free:         'bg-gray-100 text-gray-700',
-  essential:    'bg-blue-100 text-blue-700',
-  professional: 'bg-purple-100 text-purple-700',
+  free:    'bg-gray-100 text-gray-700',
+  starter: 'bg-blue-100 text-blue-700',
+  growth:  'bg-primary/10 text-primary',
+  scale:   'bg-purple-100 text-purple-700',
 };
 
 export default function BillingSection({ org }) {
+  const [billingInterval, setBillingInterval] = useState('annual');
   const [loadingTier, setLoadingTier] = useState(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [invoices, setInvoices] = useState([]);
@@ -25,6 +27,10 @@ export default function BillingSection({ org }) {
   const renewalDate = org?.current_period_end
     ? new Date(org.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
+  const trialEndDate = org?.trial_end_date
+    ? new Date(org.trial_end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+  const isTrialing = org?.stripe_subscription_status === 'trialing';
 
   useEffect(() => {
     base44.functions.invoke('stripeInvoices', {})
@@ -36,15 +42,22 @@ export default function BillingSection({ org }) {
   const handleManageSubscription = async () => {
     setPortalLoading(true);
     const res = await base44.functions.invoke('stripePortal', {});
-    if (res.data?.url) window.location.href = res.data.url;
+    if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
     setPortalLoading(false);
   };
 
   const handleUpgrade = async (tier) => {
     if (tier === 'free') return;
     setLoadingTier(tier);
-    const res = await base44.functions.invoke('stripeCheckout', { tier });
-    if (res.data?.url) window.location.href = res.data.url;
+    const res = await base44.functions.invoke('stripeCheckout', {
+      tier,
+      billing_interval: billingInterval,
+    });
+    if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
     setLoadingTier(null);
   };
 
@@ -54,7 +67,7 @@ export default function BillingSection({ org }) {
   };
 
   const brcStatus = org?.brc_subscription_status;
-  const brcActive = brcStatus === 'active';
+  const brcActive = brcStatus === 'active' || brcStatus === 'trialing';
   const brcRenewalDate = org?.brc_current_period_end
     ? new Date(org.brc_current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
@@ -62,7 +75,7 @@ export default function BillingSection({ org }) {
   const [brcCheckoutLoading, setBrcCheckoutLoading] = useState(false);
   const handleBrcSubscribe = async () => {
     setBrcCheckoutLoading(true);
-    const res = await base44.functions.invoke('stripeBrcCheckout', {});
+    const res = await base44.functions.invoke('stripeBrcCheckout', { billing_interval: 'monthly' });
     if (res.data?.url) window.location.href = res.data.url;
     setBrcCheckoutLoading(false);
   };
@@ -77,25 +90,60 @@ export default function BillingSection({ org }) {
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${tierColor}`}>
               {tierLabel}
             </span>
+            {isTrialing && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wide">
+                Trial
+              </span>
+            )}
           </div>
-          {renewalDate && currentTier !== 'free' && (
+          {isTrialing && trialEndDate && (
+            <p className="text-xs text-amber-700 mt-1">Free trial ends {trialEndDate} — add card to continue</p>
+          )}
+          {renewalDate && !isTrialing && (
             <p className="text-xs text-muted-foreground mt-1">Renews {renewalDate}</p>
           )}
         </div>
         {org?.stripe_customer_id && (
-          <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManageSubscription}
+            disabled={portalLoading}
+          >
             {portalLoading
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <><Settings className="w-3.5 h-3.5 mr-1.5" /> Manage / Cancel</>
+              : <><Settings className="w-3.5 h-3.5 mr-1.5" /> Manage / Cancel Subscription</>
             }
           </Button>
         )}
       </div>
 
-      {/* Plan cards — Essential and Professional only (Free is the default/current) */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(['essential', 'professional']).map(tier => {
-          const price = TIER_PRICING[tier].monthly;
+      {/* Billing interval toggle */}
+      {currentTier !== 'scale' && (
+        <div>
+          <p className="text-sm font-medium mb-2">Choose billing interval</p>
+          <div className="inline-flex rounded-lg border border-border p-1 bg-muted/30">
+            <button
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${billingInterval === 'monthly' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setBillingInterval('monthly')}
+            >
+              Monthly
+            </button>
+            <button
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors relative ${billingInterval === 'annual' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setBillingInterval('annual')}
+            >
+              Annual
+              <span className="ml-1.5 text-xs text-green-600 font-semibold">Save 17%</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Plan cards */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {['starter', 'growth', 'scale'].map(tier => {
+          const price = TIER_PRICING[tier][billingInterval];
           const isCurrentPlan = tier === currentTier;
           const isLower = TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf(currentTier);
           const features = TIER_FEATURES[tier];
@@ -106,21 +154,24 @@ export default function BillingSection({ org }) {
               className={`rounded-xl border p-4 space-y-3 transition-all ${isCurrentPlan ? 'border-primary bg-primary/5' : 'border-border'}`}
             >
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm">{TIER_LABELS[tier]}</p>
+                <p className="font-semibold text-sm capitalize">{tier}</p>
                 {isCurrentPlan && <Check className="w-4 h-4 text-primary" />}
               </div>
               <div>
-                <span className="text-2xl font-bold">£{price}</span>
-                <span className="text-xs text-muted-foreground">/mo + VAT</span>
+                <span className="text-2xl font-bold">£{billingInterval === 'annual' ? Math.round(price / 12) : price}</span>
+                <span className="text-xs text-muted-foreground">/mo</span>
+                <span className="text-xs text-muted-foreground ml-1">(+ VAT)</span>
+                {billingInterval === 'annual' && (
+                  <p className="text-xs text-muted-foreground">billed £{price}/year + VAT</p>
+                )}
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground">
-                <li>• Up to {TIER_LIMITS[tier].employees} members</li>
+                <li>• Up to {TIER_LIMITS[tier].employees} employees</li>
                 <li>• {TIER_LIMITS[tier].skills === null ? 'Unlimited' : TIER_LIMITS[tier].skills} skills</li>
                 <li>• {TIER_LIMITS[tier].manager_seats === null ? 'Unlimited' : TIER_LIMITS[tier].manager_seats} manager seats</li>
-                {features.csv_export && <li className="text-green-700">• Gap analysis & CSV export</li>}
-                {features.employee_portal && <li className="text-green-700">• Employee portal</li>}
                 {features.pdf_reports && <li className="text-green-700">• PDF reports</li>}
-                {features.advanced_analytics && <li className="text-green-700">• Advanced analytics & site views</li>}
+                {features.employee_portal && <li className="text-green-700">• Employee portal</li>}
+                {features.advanced_analytics && <li className="text-green-700">• Advanced analytics</li>}
               </ul>
               <Button
                 size="sm"
@@ -152,47 +203,48 @@ export default function BillingSection({ org }) {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">BRC Compliance Readiness</p>
-              <p className="text-xs text-muted-foreground">Add-on module — can be used independently or alongside Skills Matrix</p>
+              <p className="text-xs text-muted-foreground">Add-on module — purchased independently</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {brcActive ? (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700 uppercase tracking-wide">Active</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700 uppercase tracking-wide">
+                {brcStatus === 'trialing' ? 'Trial' : 'Active'}
+              </span>
             ) : brcStatus === 'past_due' ? (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wide">Past Due</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wide">
+                Past Due
+              </span>
             ) : (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 uppercase tracking-wide">Not Active</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 uppercase tracking-wide">
+                Not Active
+              </span>
             )}
           </div>
         </div>
 
         {brcActive ? (
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <p className="text-xs text-muted-foreground">{brcRenewalDate ? `Renews ${brcRenewalDate}` : 'Active'}</p>
+            <p className="text-xs text-muted-foreground">
+              {brcRenewalDate ? `Renews ${brcRenewalDate}` : 'Active'}
+            </p>
             <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
               {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Settings className="w-3.5 h-3.5 mr-1.5" />Manage BRC Subscription</>}
             </Button>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">£{BRC_PRICING.monthly}/mo</span> + VAT
-              </p>
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={handleBrcSubscribe} disabled={brcCheckoutLoading} className="gap-1.5">
-                  {brcCheckoutLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><ArrowRight className="w-3.5 h-3.5" />Subscribe — £{BRC_PRICING.monthly}/mo</>}
-                </Button>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/upgrade-brc">View features</Link>
-                </Button>
-              </div>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <p className="text-xs text-muted-foreground">
+              From <span className="font-semibold text-foreground">£{BRC_PRICING.monthly}/mo</span> or <span className="font-semibold text-foreground">£{BRC_PRICING.annual}/yr</span> + VAT. 14-day free trial.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleBrcSubscribe} disabled={brcCheckoutLoading} className="gap-1.5">
+                {brcCheckoutLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><ArrowRight className="w-3.5 h-3.5" />Start Free Trial</>}
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/upgrade-brc">View features</Link>
+              </Button>
             </div>
-            {currentTier !== 'free' && (
-              <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-                💡 Already on Skills Matrix? Both subscriptions share one Stripe customer — you'll receive a single combined invoice.
-              </p>
-            )}
           </div>
         )}
       </div>
@@ -227,13 +279,17 @@ export default function BillingSection({ org }) {
                       {new Date(inv.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-[160px]">
-                      {inv.description || 'Subscription'}
+                      {inv.description || 'SkillsMatrix subscription'}
                     </td>
-                    <td className="px-3 py-2 text-xs font-medium">{formatAmount(inv.amount, inv.currency)}</td>
+                    <td className="px-3 py-2 text-xs font-medium">
+                      {formatAmount(inv.amount, inv.currency)}
+                    </td>
                     <td className="px-3 py-2">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         inv.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>{inv.status}</span>
+                      }`}>
+                        {inv.status}
+                      </span>
                     </td>
                     <td className="px-3 py-2 text-right">
                       {inv.pdf_url && (

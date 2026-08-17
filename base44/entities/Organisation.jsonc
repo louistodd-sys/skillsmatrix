@@ -49,8 +49,9 @@
       "title": "Subscription Tier",
       "enum": [
         "free",
-        "essential",
-        "professional"
+        "starter",
+        "growth",
+        "scale"
       ],
       "default": "free"
     },
