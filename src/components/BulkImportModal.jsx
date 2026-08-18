@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Download, Upload, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import useModal from '@/hooks/useModal';
 
 const TEMPLATE_CSV = `Team,Member Name,Member Email
 Shift Team A,Jane Smith,jane.smith@example.com
@@ -38,6 +39,7 @@ function parseCSV(text) {
 }
 
 export default function BulkImportModal({ orgId, onClose, onImported }) {
+  const dialogRef = useModal(onClose);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null); // parsed rows
   const [importing, setImporting] = useState(false);
@@ -130,8 +132,12 @@ export default function BulkImportModal({ orgId, onClose, onImported }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-card rounded-xl border border-border shadow-xl w-full max-w-xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1} className="bg-card rounded-xl border border-border shadow-xl w-full max-w-xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
@@ -139,7 +145,14 @@ export default function BulkImportModal({ orgId, onClose, onImported }) {
             <h2 className="text-base font-semibold">Bulk Import Employees</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Upload a CSV to create multiple employee profiles at once</p>
           </div>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">

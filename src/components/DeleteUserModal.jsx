@@ -3,6 +3,7 @@ import { AlertTriangle, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import useModal from '@/hooks/useModal';
 
 /**
  * GDPR-compliant user deletion modal.
@@ -10,6 +11,7 @@ import { Label } from '@/components/ui/label';
  * Does NOT close on backdrop click (destructive action safety).
  */
 export default function DeleteUserModal({ user, onConfirm, onClose }) {
+  const dialogRef = useModal(onClose);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
@@ -25,8 +27,12 @@ export default function DeleteUserModal({ user, onConfirm, onClose }) {
 
   return (
     // Backdrop does NOT close on click — this is a destructive action
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-card rounded-xl border border-destructive/40 shadow-xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1} className="bg-card rounded-xl border border-destructive/40 shadow-xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-destructive/5 rounded-t-xl">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-destructive" />

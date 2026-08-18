@@ -1,4 +1,7 @@
-export default function MetricCard({ icon: Icon, label, value, subtext, variant = 'default', className = '' }) {
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+
+export default function MetricCard({ icon: Icon, label, value, subtext, variant = 'default', className = '', to, valueClassName = '' }) {
   const variants = {
     default: 'bg-card border-border',
     warning: 'bg-amber-50/60 border-amber-200',
@@ -18,20 +21,21 @@ export default function MetricCard({ icon: Icon, label, value, subtext, variant 
   if (className.includes('border-red'))   resolvedVariant = 'danger';
   if (className.includes('border-amber')) resolvedVariant = 'warning';
 
-  return (
-    <div className={`
-      border rounded-xl p-5 shadow-card hover:shadow-card-md transition-all duration-200
-      ${variants[resolvedVariant]}
-      ${className.replace(/border-\w+-\d+|bg-\w+-\d+\/\d+/g, '')}
-    `}>
+  const content = (
+    <>
       {/* Icon */}
-      {Icon && (
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${iconVariants[resolvedVariant]}`}>
-          <Icon className="w-[18px] h-[18px]" />
-        </div>
-      )}
+      <div className="flex items-start justify-between">
+        {Icon && (
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${iconVariants[resolvedVariant]}`}>
+            <Icon className="w-[18px] h-[18px]" />
+          </div>
+        )}
+        {to && (
+          <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        )}
+      </div>
       {/* Value */}
-      <p className="font-jakarta text-3xl font-800 text-foreground leading-none tracking-tight">
+      <p className={`font-jakarta text-3xl font-extrabold leading-none tracking-tight ${valueClassName || 'text-foreground'}`}>
         {value}
       </p>
       {/* Label */}
@@ -41,6 +45,19 @@ export default function MetricCard({ icon: Icon, label, value, subtext, variant 
       {subtext && (
         <p className="text-xs text-muted-foreground/80 mt-0.5">{subtext}</p>
       )}
-    </div>
+    </>
   );
+
+  const classes = `
+    group block text-left border rounded-xl p-5 shadow-card transition-all duration-200
+    ${to ? 'hover:shadow-card-md hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-ring' : ''}
+    ${variants[resolvedVariant]}
+    ${className.replace(/border-\w+-\d+|bg-\w+-\d+\/\d+/g, '')}
+  `;
+
+  if (to) {
+    return <Link to={to} className={classes}>{content}</Link>;
+  }
+
+  return <div className={classes}>{content}</div>;
 }

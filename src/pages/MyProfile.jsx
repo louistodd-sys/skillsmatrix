@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import RAGBadge from '@/components/RAGBadge';
 import { getRAGStatus, getProficiencyLabel } from '@/lib/ragUtils';
+import { usePageMeta } from '@/lib/pageMeta';
 
 export default function MyProfile() {
   const { org, user } = useOrganisation();
@@ -107,6 +108,8 @@ export default function MyProfile() {
     }).catch(() => {});
   };
 
+  usePageMeta({ title: 'My Skills Profile', subtitle: user?.email || undefined });
+
   if (loading) return <div className="h-64 rounded-xl bg-muted animate-pulse" />;
 
   const currentAssessments = {};
@@ -140,10 +143,9 @@ export default function MyProfile() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">My Skills Profile</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{user?.full_name} — {user?.email}</p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Your training record — every skill your team requires, and where you stand on each.
+        </p>
         <Button variant="outline" onClick={exportData} title="Download all personal data (GDPR Subject Access Request)">
           <Download className="w-4 h-4 mr-1.5" /> Export My Data
         </Button>

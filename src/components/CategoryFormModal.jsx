@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import useTierCheck from '@/hooks/useTierCheck';
 import UpgradePromptModal from '@/components/UpgradePromptModal';
+import useModal from '@/hooks/useModal';
 
 const PRESET_COLOURS = ['#DC2626', '#D97706', '#16A34A', '#2563EB', '#7C3AED', '#DB2777', '#0891B2', '#6B7280'];
 
 export default function CategoryFormModal({ categories, orgId, onClose, onSaved }) {
+  const dialogRef = useModal(onClose);
   const { checkLimit, upgradePrompt, clearPrompt } = useTierCheck();
   const [items, setItems] = useState(categories.map(c => ({ ...c })));
   const [newName, setNewName] = useState('');
@@ -52,11 +54,22 @@ export default function CategoryFormModal({ categories, orgId, onClose, onSaved 
   return (
     <>
     {upgradePrompt && <UpgradePromptModal prompt={upgradePrompt} onClose={clearPrompt} />}
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-card rounded-xl border border-border shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1} className="bg-card rounded-xl border border-border shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <h2 className="text-base font-semibold">Manage Categories</h2>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-2">

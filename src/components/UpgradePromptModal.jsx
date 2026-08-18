@@ -1,8 +1,10 @@
 import { TrendingUp, X, Zap, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import useModal from '@/hooks/useModal';
 
 export default function UpgradePromptModal({ prompt, onClose }) {
+  const dialogRef = useModal(onClose);
   const navigate = useNavigate();
 
   if (!prompt) return null;
@@ -13,9 +15,13 @@ export default function UpgradePromptModal({ prompt, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div
-        className="bg-card rounded-2xl border border-primary/20 shadow-xl w-full max-w-sm"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="bg-card rounded-2xl border border-primary/20 shadow-xl w-full max-w-sm max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

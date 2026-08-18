@@ -5,12 +5,14 @@ import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import useModal from '@/hooks/useModal';
 
 /**
  * Bulk assessment: assess one skill across all team members at once.
  * Typical use-case: "Everyone just completed Manual Handling training."
  */
 export default function BulkAssessmentModal({ skill, members, orgId, onClose, onSaved }) {
+  const dialogRef = useModal(onClose);
   const { user } = useOrganisation();
   const today = new Date().toISOString().split('T')[0];
 
@@ -87,8 +89,12 @@ export default function BulkAssessmentModal({ skill, members, orgId, onClose, on
   const includedCount = rows.filter(r => r.include).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className="bg-card rounded-xl border border-border shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
@@ -99,7 +105,14 @@ export default function BulkAssessmentModal({ skill, members, orgId, onClose, on
               Assess multiple team members on this skill at once
             </p>
           </div>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Shared date fields */}

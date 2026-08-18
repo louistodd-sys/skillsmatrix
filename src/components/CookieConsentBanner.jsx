@@ -26,7 +26,7 @@ export default function CookieConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-card-lg">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-card-lg print:hidden">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <p className="text-sm text-muted-foreground flex-1">
           We use essential cookies to keep you signed in, and optional analytics cookies to improve the product.

@@ -4,12 +4,12 @@ import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/EmptyState';
 import SkillFormModal from '@/components/SkillFormModal';
 import CategoryFormModal from '@/components/CategoryFormModal';
 import TemplatePickerModal from '@/components/TemplatePickerModal';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { usePageMeta } from '@/lib/pageMeta';
 
 export default function SkillsLibrary() {
   const { org } = useOrganisation();
@@ -60,6 +60,10 @@ export default function SkillsLibrary() {
   const getCategoryName = (id) => categories.find(c => c.id === id)?.name || 'Uncategorised';
   const getCategoryColour = (id) => categories.find(c => c.id === id)?.colour || '#6B7280';
 
+  usePageMeta({
+    subtitle: `${skills.length} skill${skills.length === 1 ? '' : 's'} across ${categories.length} categor${categories.length === 1 ? 'y' : 'ies'}`,
+  });
+
   if (loading) {
     return <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />)}</div>;
   }
@@ -67,10 +71,9 @@ export default function SkillsLibrary() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Skills Library</h1>
-          <p className="text-sm text-muted-foreground mt-1">{skills.length} skills across {categories.length} categories</p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Every skill, ticket and certificate you track — these become the columns of your matrix.
+        </p>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setShowCategoryForm(true)}>Manage Categories</Button>
           <Button variant="outline" onClick={() => setShowTemplates(true)}>Templates</Button>
@@ -124,8 +127,8 @@ export default function SkillsLibrary() {
                 <tr className="border-b border-border bg-muted/50">
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Skill Name</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Category</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Scale</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Expiry</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">How it's scored</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Renewal</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Status</th>
                   <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Actions</th>
                 </tr>
@@ -143,8 +146,12 @@ export default function SkillsLibrary() {
                         {getCategoryName(skill.category_id)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground capitalize">{skill.scale_type}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{skill.requires_expiry ? 'Yes' : 'No'}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {skill.scale_type === 'binary' ? 'Pass / fail' : 'Levels 0–4'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {skill.requires_expiry ? 'Expires — needs renewal' : 'No expiry'}
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => handleArchive(skill)}
@@ -161,11 +168,25 @@ export default function SkillsLibrary() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingSkill(skill); setShowSkillForm(true); }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label={`Edit ${skill.name}`}
+                          title={`Edit ${skill.name}`}
+                          onClick={() => { setEditingSkill(skill); setShowSkillForm(true); }}
+                        >
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
 
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setConfirmDelete(skill)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          aria-label={`Delete ${skill.name}`}
+                          title={`Delete ${skill.name}`}
+                          onClick={() => setConfirmDelete(skill)}
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>

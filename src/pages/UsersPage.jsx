@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Plus, Search, Users, Mail, RefreshCw, XCircle, UserPlus,
+  Plus, Search, Users, Mail, RefreshCw, XCircle,
   Pencil, Trash2, AlertTriangle, X, Loader2, UserCog,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -14,6 +14,7 @@ import InviteUserModal from '@/components/InviteUserModal';
 import AddEmployeeModal from '@/components/AddEmployeeModal';
 import EditEmployeeModal from '@/components/EditEmployeeModal';
 import { format, parseISO } from 'date-fns';
+import { usePageMeta } from '@/lib/pageMeta';
 
 const STATUS_COLORS = {
   active:   'bg-green-100 text-green-700',
@@ -208,6 +209,10 @@ export default function UsersPage() {
     try { return format(parseISO(dateStr), 'dd MMM yyyy'); } catch { return dateStr; }
   };
 
+  usePageMeta({
+    subtitle: `${users.length} app user${users.length !== 1 ? 's' : ''} · ${allEmployees.length} managed employee${allEmployees.length !== 1 ? 's' : ''}`,
+  });
+
   if (loading) return (
     <div className="space-y-3">
       {[...Array(5)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-muted animate-pulse" />)}
@@ -218,11 +223,8 @@ export default function UsersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Users</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {users.length} app user{users.length !== 1 ? 's' : ''} · {allEmployees.length} managed employee{allEmployees.length !== 1 ? 's' : ''}
-          </p>
+        <div className="text-sm text-muted-foreground">
+          People who can sign in, and the employee profiles you manage on their behalf.
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowAddEmployee(true)}>

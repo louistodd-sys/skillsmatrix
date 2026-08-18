@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { BarChart3, Filter, ChevronRight } from 'lucide-react';
+import { BarChart3, Filter, ChevronRight, Download, AlertTriangle, Users2, GraduationCap } from 'lucide-react';
 import SkillDrillDown from '@/components/SkillDrillDown';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import EmptyState from '@/components/EmptyState';
 import RAGBar from '@/components/RAGBar';
-import RAGBadge from '@/components/RAGBadge';
 import { getRAGStatus, getProficiencyLabel } from '@/lib/ragUtils';
+import { usePageMeta } from '@/lib/pageMeta';
+import { downloadCSV, exportFilename } from '@/lib/exportUtils';
+import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 export default function GapAnalysis() {
@@ -60,6 +62,8 @@ export default function GapAnalysis() {
     }
     setLoading(false);
   }
+
+  usePageMeta({ subtitle: 'Where the gaps are, and who needs training' });
 
   if (loading) return <div className="h-96 rounded-xl bg-muted animate-pulse" />;
 
@@ -154,6 +158,53 @@ export default function GapAnalysis() {
     individualStats = individualStats.filter(m => m.hasRed);
   }
 
+  // ── Headline numbers + exportable training-needs list ──────────────────
+  const teamCompliance = (() => {
+    let green = 0, total = 0;
+    skillCoverage.forEach(item => { green += item.green; total += item.total; });
+    return total > 0 ? Math.round((green / total) * 100) : 0;
+  })();
+  const skillsBelowFull = skillCoverage.filter(item => item.coveragePct < 100).length;
+  const peopleWithGaps  = individualStats.filter(m => m.hasRed).length;
+
+  // One row per person per skill that needs action — the list a training plan is built from
+  const trainingNeeds = teamMembers.flatMap(member =>
+    teamReqSkills.map(req => {
+      const skill = skills.find(s => s.id === req.skill_id);
+      if (!skill) return null;
+      const assessment = currentAssessments[`${member.user_id}-${req.skill_id}`];
+      const status = getRAGStatus(assessment, skill, req);
+      if (status === 'green') return null;
+      return {
+        member, skill, assessment, status,
+        category: categories.find(c => c.id === skill.category_id),
+        required: getProficiencyLabel(req.minimum_proficiency ?? 1, skill.scale_type),
+      };
+    }).filter(Boolean)
+  );
+
+  const handleExportTrainingNeeds = () => {
+    const teamLabel = teams.find(t => t.id === selectedTeam)?.name || 'team';
+    downloadCSV(
+      exportFilename('training-needs', teamLabel),
+      [
+        ['Training needs', teamLabel],
+        [],
+        ['Person', 'Skill', 'Category', 'Status', 'Current level', 'Required level', 'Last assessed', 'Expires'],
+        ...trainingNeeds.map(n => [
+          n.member.user_name || 'Unknown',
+          n.skill.name,
+          n.category?.name || 'Uncategorised',
+          n.status === 'red' ? 'Gap' : n.status === 'amber' ? 'Expiring' : 'Not assessed',
+          n.assessment ? getProficiencyLabel(n.assessment.proficiency_level, n.skill.scale_type) : 'Not assessed',
+          n.required,
+          n.assessment?.assessed_date || '',
+          n.assessment?.expiry_date || '',
+        ]),
+      ]
+    );
+  };
+
   const categoriesInTeam = categories.filter(c =>
     teamReqSkills.some(r => {
       const skill = skills.find(s => s.id === r.skill_id);
@@ -162,21 +213,61 @@ export default function GapAnalysis() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Gap Analysis</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Identify skills gaps and training needs</p>
-        </div>
+    <div className="space-y-5">
+      {/* Team picker + export */}
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="gap-team" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Team
+        </label>
         <select
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          id="gap-team"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
           value={selectedTeam}
           onChange={e => setSelectedTeam(e.target.value)}
         >
           {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
+
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={handleExportTrainingNeeds}
+            disabled={trainingNeeds.length === 0}
+          >
+            <Download className="w-3.5 h-3.5 mr-1.5" /> Export training needs
+          </Button>
+        </div>
       </div>
+
+      {/* Headline numbers — what an HR lead reports upwards */}
+      {teamReqSkills.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              label: 'Team compliance',
+              value: `${teamCompliance}%`,
+              icon: GraduationCap,
+              tone: teamCompliance >= 80 ? 'text-rag-green' : teamCompliance >= 50 ? 'text-rag-amber' : 'text-rag-red',
+            },
+            { label: 'Skills below 100%', value: skillsBelowFull, icon: BarChart3, tone: skillsBelowFull > 0 ? 'text-rag-amber' : 'text-rag-green' },
+            { label: 'People with gaps',  value: peopleWithGaps,  icon: Users2,    tone: peopleWithGaps > 0 ? 'text-rag-red' : 'text-rag-green' },
+            { label: 'Training actions',  value: trainingNeeds.length, icon: AlertTriangle, tone: trainingNeeds.length > 0 ? 'text-rag-red' : 'text-rag-green' },
+          ].map(({ label, value, icon: Icon, tone }) => (
+            <div key={label} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Icon className={`w-4 h-4 ${tone}`} />
+              </div>
+              <div className="min-w-0">
+                <p className={`text-xl font-bold tabular-nums ${tone}`}>{value}</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide truncate">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center p-3 bg-muted/40 rounded-lg border border-border">
@@ -316,7 +407,7 @@ export default function GapAnalysis() {
                 {individualStats.map(m => (
                   <Link
                     key={m.user_id}
-                    to={`/people`}
+                    to={`/users/${m.user_id}`}
                     className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold shrink-0">

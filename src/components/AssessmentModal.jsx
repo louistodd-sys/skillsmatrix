@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getProficiencyLabel } from '@/lib/ragUtils';
+import { formatDate } from '@/lib/format';
+import useModal from '@/hooks/useModal';
 
 export default function AssessmentModal({ userId, userName, skill, existingAssessment, orgId, onClose, onSaved }) {
+  const dialogRef = useModal(onClose);
   const { user } = useOrganisation();
   const [form, setForm] = useState({
     proficiency_level: existingAssessment?.proficiency_level != null ? Number(existingAssessment.proficiency_level) : (skill.scale_type === 'binary' ? 1 : 3),
@@ -95,9 +98,13 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
       ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div
-        className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md mx-4"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -105,7 +112,14 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
             <h2 className="text-base font-semibold">Assess Skill</h2>
             <p className="text-xs text-muted-foreground">{userName} — {skill.name}</p>
           </div>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {existingAssessment && (
@@ -114,8 +128,8 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
             <span className="font-medium text-foreground">
               {getProficiencyLabel(existingAssessment.proficiency_level, skill.scale_type)}
             </span>
-            {existingAssessment.assessed_date && <> — Assessed {existingAssessment.assessed_date}</>}
-            {existingAssessment.expiry_date    && <> — Expires {existingAssessment.expiry_date}</>}
+            {existingAssessment.assessed_date && <> — Assessed {formatDate(existingAssessment.assessed_date)}</>}
+            {existingAssessment.expiry_date    && <> — Expires {formatDate(existingAssessment.expiry_date)}</>}
             {existingAssessment.assessed_by_name && <> — by {existingAssessment.assessed_by_name}</>}
           </div>
         )}

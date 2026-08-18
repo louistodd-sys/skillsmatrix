@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/EmptyState';
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
+import { usePageMeta } from '@/lib/pageMeta';
 
 const PAGE_SIZE = 50;
 
@@ -78,6 +79,8 @@ export default function AuditLog() {
     return 'bg-gray-100 text-gray-700';
   };
 
+  usePageMeta({ subtitle: 'Tamper-evident record of all significant actions' });
+
   if (loading) return (
     <div className="space-y-3">
       {[...Array(8)].map((_, i) => <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />)}
@@ -86,11 +89,6 @@ export default function AuditLog() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Audit Log</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Tamper-evident record of all significant actions</p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-48">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, Plus, Trash2, BookOpen, Settings2, Grid3X3, BarChart3, AlertTriangle, X, Loader2 } from 'lucide-react';
+import { Users, Plus, Trash2, BookOpen, Settings2, Grid3X3, BarChart3, AlertTriangle, X, Loader2, TrendingUp } from 'lucide-react';
 import Breadcrumb from '@/components/Breadcrumb';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
@@ -11,6 +11,7 @@ import AddMemberModal from '@/components/AddMemberModal';
 import AddEmployeeModal from '@/components/AddEmployeeModal';
 import ManageRequiredSkillsModal from '@/components/ManageRequiredSkillsModal';
 import { getRAGStatus } from '@/lib/ragUtils';
+import { usePageMeta } from '@/lib/pageMeta';
 
 // Inline confirmation modal (replaces browser confirm())
 function ConfirmRemoveModal({ memberName, onConfirm, onClose }) {
@@ -106,6 +107,8 @@ export default function TeamDetail() {
     loadData();
   };
 
+  usePageMeta({ title: team?.name, subtitle: team?.description || undefined });
+
   if (loading) return <div className="h-64 rounded-xl bg-muted animate-pulse" />;
   if (!team)   return <p className="text-muted-foreground p-4">Team not found.</p>;
 
@@ -143,20 +146,26 @@ export default function TeamDetail() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{team.name}</h1>
-          {team.description && <p className="text-sm text-muted-foreground mt-0.5">{team.description}</p>}
-        </div>
+        <div />
         {canManage && (
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowReqSkills(true)}>
               <Settings2 className="w-4 h-4 mr-1.5" /> Required Skills
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowAddEmployee(true)}>
-              <Plus className="w-4 h-4 mr-1.5" /> Add Employee
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddEmployee(true)}
+              title="Create a profile for someone who doesn't need to sign in"
+            >
+              <Plus className="w-4 h-4 mr-1.5" /> New employee profile
             </Button>
-            <Button size="sm" onClick={() => setShowAddMember(true)}>
-              <Plus className="w-4 h-4 mr-1.5" /> Add Existing User
+            <Button
+              size="sm"
+              onClick={() => setShowAddMember(true)}
+              title="Add someone who already has an account in this organisation"
+            >
+              <Plus className="w-4 h-4 mr-1.5" /> Add existing user
             </Button>
           </div>
         )}
@@ -166,10 +175,26 @@ export default function TeamDetail() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard icon={Users}    label="Members"         value={members.length} />
         <MetricCard icon={BookOpen} label="Required Skills" value={required.length} />
-        <MetricCard               label="Compliance"       value={`${compliance}%`} />
-        <div className="bg-card border border-border rounded-xl p-5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">RAG Summary</p>
-          <RAGBar green={totalGreen} amber={totalAmber} red={totalRed} grey={totalGrey} showLabels />
+        <MetricCard
+          icon={TrendingUp}
+          label="Compliance"
+          value={`${compliance}%`}
+          subtext="required skills current"
+          valueClassName={
+            compliance >= 80 ? 'text-rag-green' : compliance >= 50 ? 'text-rag-amber' : 'text-rag-red'
+          }
+        />
+        <div className="bg-card border border-border rounded-xl p-5 shadow-card flex flex-col justify-between">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status mix</p>
+          <div className="mt-3">
+            <RAGBar green={totalGreen} amber={totalAmber} red={totalRed} grey={totalGrey} />
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2.5 text-2xs text-muted-foreground">
+              <span><span className="font-bold text-rag-green">{totalGreen}</span> current</span>
+              <span><span className="font-bold text-rag-amber">{totalAmber}</span> expiring</span>
+              <span><span className="font-bold text-rag-red">{totalRed}</span> gaps</span>
+              <span><span className="font-bold">{totalGrey}</span> unassessed</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -249,6 +274,8 @@ export default function TeamDetail() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
+                      aria-label={`Remove ${m.user_name || 'member'} from this team`}
+                      title={`Remove ${m.user_name || 'member'} from this team`}
                       onClick={() => setRemovingMember(m)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

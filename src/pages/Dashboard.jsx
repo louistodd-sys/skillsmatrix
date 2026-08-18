@@ -11,6 +11,8 @@ import MetricCard from '@/components/MetricCard';
 import RAGBar from '@/components/RAGBar';
 import EmptyState from '@/components/EmptyState';
 import { getRAGStatus } from '@/lib/ragUtils';
+import { usePageMeta } from '@/lib/pageMeta';
+import { formatDate, pluralise } from '@/lib/format';
 import { parseISO, differenceInDays, endOfWeek, endOfMonth, isBefore } from 'date-fns';
 
 import { getLatestAssessments } from '@/utils/assessmentUtils';
@@ -33,7 +35,7 @@ function OnboardingChecklist({ org, assessmentCount, teamCount, skillCount, hasR
     <div className="bg-card border border-primary/20 rounded-xl p-5 shadow-card">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <p className="font-jakarta font-700 text-base text-foreground">Getting started</p>
+          <p className="font-jakarta font-bold text-base text-foreground">Getting started</p>
           <p className="text-sm text-muted-foreground mt-0.5">Complete these steps to set up your organisation</p>
         </div>
         <button
@@ -164,7 +166,7 @@ function ActivityItem({ a }) {
         </p>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">{a.skill_name}</p>
       </div>
-      <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{a.assessed_date}</span>
+      <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{formatDate(a.assessed_date)}</span>
     </div>
   );
 }
@@ -282,6 +284,12 @@ export default function Dashboard() {
     setLoading(false);
   }
 
+  usePageMeta({
+    subtitle: user?.role === 'manager'
+      ? 'Your team overview'
+      : org?.name ? `${org.name} · skills compliance overview` : undefined,
+  });
+
   const handleDismissChecklist = () => {
     localStorage.setItem(`checklist_dismissed_${org?.id}`, 'true');
     setChecklistDismissed(true);
@@ -321,13 +329,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <p className="text-sm text-muted-foreground">
-          {user?.role === 'manager' ? 'Your team overview' : `${org.name} · skills compliance overview`}
-        </p>
-      </div>
-
       {/* BRC: connected banner (both modules active) */}
       {hasMultipleModules(org) && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/15">
@@ -366,28 +367,38 @@ export default function Dashboard() {
 
       {/* ── Metrics ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-        <MetricCard icon={Users}          label="Active Users"   value={data.userCount} />
-        <MetricCard icon={BookOpen}       label="Skills"         value={data.skillCount} />
-        <MetricCard icon={ClipboardCheck} label="Assessments"    value={data.assessmentCount} />
+        <MetricCard icon={Users}          label="People"      value={data.userCount}       to="/people" />
+        <MetricCard icon={BookOpen}       label="Skills"      value={data.skillCount}      to="/skills-library" />
+        <MetricCard icon={ClipboardCheck} label="Assessments" value={data.assessmentCount} to="/matrix" />
         {isAdmin && (
           <MetricCard
             icon={TrendingUp}
             label="Compliance"
             value={`${data.compliancePercent}%`}
             subtext="required skills current"
+            valueClassName={
+              data.compliancePercent >= 80 ? 'text-rag-green'
+                : data.compliancePercent >= 50 ? 'text-rag-amber'
+                : 'text-rag-red'
+            }
+            to="/gap-analysis"
           />
         )}
         <MetricCard
           icon={AlertTriangle}
           label="Expired"
           value={data.expired}
+          subtext={data.expired > 0 ? 'needs rebooking' : 'nothing overdue'}
           className={data.expired > 0 ? 'border-red-200 bg-red-50/40' : ''}
+          to="/matrix"
         />
         <MetricCard
           icon={Clock}
           label="Expiring ≤30d"
           value={data.expiringIn30}
+          subtext={data.expiringIn30 > 0 ? 'book refresher training' : 'nothing due'}
           className={data.expiringIn30 > 0 ? 'border-amber-200 bg-amber-50/40' : ''}
+          to="/gap-analysis"
         />
       </div>
 
@@ -396,7 +407,7 @@ export default function Dashboard() {
         {/* Team Health */}
         <div className="bg-card border border-border rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-jakarta font-700 text-base text-foreground">Team Health</h2>
+            <h2 className="font-jakarta font-bold text-base text-foreground">Team Health</h2>
             <Link
               to="/teams"
               className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
@@ -418,12 +429,12 @@ export default function Dashboard() {
                     <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                       {team.name}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{team.memberCount} {team.memberCount === 1 ? 'member' : 'members'}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{pluralise(team.memberCount, 'member')}</p>
                   </div>
-                  <div className="w-28 hidden sm:block">
-                    <RAGBar green={team.green} amber={team.amber} red={team.red} grey={team.grey} showLabels />
+                  <div className="w-32 hidden sm:block">
+                    <RAGBar green={team.green} amber={team.amber} red={team.red} grey={team.grey} />
                   </div>
-                  <span className={`text-sm font-bold w-10 text-right shrink-0 tabular-nums ${
+                  <span className={`text-sm font-bold w-12 text-right shrink-0 tabular-nums ${
                     team.compliance >= 80 ? 'text-rag-green' :
                     team.compliance >= 50 ? 'text-rag-amber' :
                     'text-rag-red'
@@ -439,7 +450,7 @@ export default function Dashboard() {
         {/* Expiry Timeline */}
         <div className="bg-card border border-border rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-border">
-            <h2 className="font-jakarta font-700 text-base text-foreground">Expiry Timeline</h2>
+            <h2 className="font-jakarta font-bold text-base text-foreground">Expiry Timeline</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Skills expiring in the next 90 days</p>
           </div>
           <div className="p-4 space-y-2">
@@ -465,7 +476,7 @@ export default function Dashboard() {
       {data.recentAssessments.length > 0 && (
         <div className="bg-card border border-border rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-border">
-            <h2 className="font-jakarta font-700 text-base text-foreground">Recent Activity</h2>
+            <h2 className="font-jakarta font-bold text-base text-foreground">Recent Activity</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Latest skill assessments recorded</p>
           </div>
           <div className="divide-y divide-border">

@@ -8,6 +8,7 @@ import EmptyState from '@/components/EmptyState';
 import RAGBar from '@/components/RAGBar';
 import TeamFormModal from '@/components/TeamFormModal';
 import { getRAGStatus } from '@/lib/ragUtils';
+import { usePageMeta } from '@/lib/pageMeta';
 
 export default function Teams() {
   const { org, user } = useOrganisation();
@@ -70,6 +71,10 @@ export default function Teams() {
     return { memberCount: members.length, reqSkillCount: reqSkills.length, green, amber, red, grey };
   };
 
+  usePageMeta({
+    subtitle: `${visibleTeams.length} team${visibleTeams.length === 1 ? '' : 's'} · grouped by required skills`,
+  });
+
   if (loading) {
     return <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}</div>;
   }
@@ -77,10 +82,9 @@ export default function Teams() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Teams</h1>
-          <p className="text-sm text-muted-foreground mt-1">{visibleTeams.length} teams</p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          A team defines which skills its people are required to hold.
+        </p>
         {user?.role === 'admin' && (
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-1.5" /> Create Team
@@ -125,8 +129,15 @@ export default function Teams() {
                   <div className="flex-1">
                     <RAGBar green={stats.green} amber={stats.amber} red={stats.red} grey={stats.grey} />
                   </div>
-                  <span className="text-sm font-semibold text-foreground">{compliance}%</span>
+                  <span className={`text-sm font-bold tabular-nums shrink-0 ${
+                    compliance >= 80 ? 'text-rag-green' : compliance >= 50 ? 'text-rag-amber' : 'text-rag-red'
+                  }`}>
+                    {compliance}%
+                  </span>
                 </div>
+                <p className="text-2xs text-muted-foreground mt-1.5">
+                  of required skills are current across the team
+                </p>
               </Link>
             );
           })}
