@@ -7,6 +7,7 @@ import useOrganisation from '@/lib/useOrganisation';
 import EmptyState from '@/components/EmptyState';
 import RAGBar from '@/components/RAGBar';
 import { getRAGStatus, getProficiencyLabel } from '@/lib/ragUtils';
+import { getLatestAssessments } from '@/utils/assessmentUtils';
 import { usePageMeta } from '@/lib/pageMeta';
 import { downloadCSV, exportFilename } from '@/lib/exportUtils';
 import { Button } from '@/components/ui/button';
@@ -67,11 +68,8 @@ export default function GapAnalysis() {
 
   if (loading) return <div className="h-96 rounded-xl bg-muted animate-pulse" />;
 
-  // Current assessment map
-  const currentAssessments = {};
-  [...assessments]
-    .sort((a, b) => (a.assessed_date || '').localeCompare(b.assessed_date || ''))
-    .forEach(a => { currentAssessments[`${a.user_id}-${a.skill_id}`] = a; });
+  // Current assessment map — shared helper so every page agrees on "latest"
+  const currentAssessments = getLatestAssessments(assessments);
 
   const teamMembers  = members.filter(m => m.team_id === selectedTeam);
   let teamReqSkills  = reqSkills.filter(r => r.team_id === selectedTeam && r.is_required);

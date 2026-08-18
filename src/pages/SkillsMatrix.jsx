@@ -117,7 +117,7 @@ function MatrixLegend() {
 // ─── Main component ────────────────────────────────────────────────────────
 export default function SkillsMatrix() {
   const { org, user } = useOrganisation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const [teams, setTeams]                   = useState([]);
@@ -223,6 +223,16 @@ export default function SkillsMatrix() {
       ? undefined
       : `${teamName} · ${pluralise(totalMembers, 'member')} · ${pluralise(allVisibleSkills.length, 'skill')}`,
   });
+
+  // Keep the chosen team in the URL so a view can be bookmarked or shared
+  useEffect(() => {
+    const current = searchParams.get('team') || 'all';
+    if (current === selectedTeam) return;
+    const next = new URLSearchParams(searchParams);
+    if (selectedTeam === 'all') next.delete('team');
+    else next.set('team', selectedTeam);
+    setSearchParams(next, { replace: true });
+  }, [selectedTeam]);
 
   // The compliance column only docks to the right edge when the matrix is wider
   // than the screen — otherwise it would float away from the last skill column.

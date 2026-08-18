@@ -8,6 +8,7 @@ import EmptyState from '@/components/EmptyState';
 import RAGBar from '@/components/RAGBar';
 import TeamFormModal from '@/components/TeamFormModal';
 import { getRAGStatus } from '@/lib/ragUtils';
+import { getLatestAssessments } from '@/utils/assessmentUtils';
 import { usePageMeta } from '@/lib/pageMeta';
 
 export default function Teams() {
@@ -43,17 +44,11 @@ export default function Teams() {
   // Filter teams for managers
   const visibleTeams = user?.role === 'admin' ? teams : teams.filter(t => t.manager_ids?.includes(user?.id));
 
+  const currentAssessments = getLatestAssessments(assessments);
+
   const getTeamStats = (team) => {
     const members = teamMembers.filter(m => m.team_id === team.id);
     const reqSkills = teamReqSkills.filter(r => r.team_id === team.id && r.is_required);
-
-    const currentAssessments = {};
-    assessments.forEach(a => {
-      const key = `${a.user_id}-${a.skill_id}`;
-      if (!currentAssessments[key] || a.assessed_date > currentAssessments[key].assessed_date) {
-        currentAssessments[key] = a;
-      }
-    });
 
     let green = 0, amber = 0, red = 0, grey = 0;
     members.forEach(member => {
