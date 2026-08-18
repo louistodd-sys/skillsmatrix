@@ -3,8 +3,10 @@ import { X, Check, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { industryTemplates } from '@/lib/industryTemplates';
+import useModal from '@/hooks/useModal';
 
 export default function TemplatePickerModal({ orgId, existingCategories, onClose, onImported }) {
+  const dialogRef = useModal(onClose);
   const [selected, setSelected] = useState(null);
   const [importing, setImporting] = useState(false);
 
@@ -43,11 +45,22 @@ export default function TemplatePickerModal({ orgId, existingCategories, onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-card rounded-xl border border-border shadow-xl w-full max-w-2xl mx-4" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1} className="bg-card rounded-xl border border-border shadow-xl w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h2 className="text-base font-semibold">Industry Starter Templates</h2>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
         <div className="p-5">
           <p className="text-sm text-muted-foreground mb-4">Choose a template to quickly populate your skills library. You can edit or remove any skills afterwards.</p>

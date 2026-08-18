@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import useOrganisation from '@/lib/useOrganisation';
 import NotificationCenter from '@/components/NotificationCenter';
 import ModuleSwitcher from '@/components/ModuleSwitcher';
-import { hasBrcModule, hasSkillsMatrixModule, hasMultipleModules, MODULE_SKILLS_MATRIX, MODULE_BRC_COMPLIANCE } from '@/lib/brcModuleGuard';
+import { hasBrcModule, MODULE_SKILLS_MATRIX, MODULE_BRC_COMPLIANCE } from '@/lib/brcModuleGuard';
+import { PageMetaProvider, usePageMetaValue } from '@/lib/pageMeta';
 
 // ─── Navigation definitions ───────────────────────────────────────────────
 const adminNav = [
@@ -191,10 +192,19 @@ function NavItem({ item, isActive, onClick }) {
 
 // ─── Main Layout ──────────────────────────────────────────────────────────
 export default function Layout() {
+  return (
+    <PageMetaProvider>
+      <LayoutShell />
+    </PageMetaProvider>
+  );
+}
+
+function LayoutShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
+  const pageMeta = usePageMetaValue();
   const { org, user } = useOrganisation();
   const navigate = useNavigate();
 
@@ -272,6 +282,14 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      {/* Skip link — keyboard users can jump past the sidebar */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[60] focus:top-3 focus:left-3 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-card focus:text-foreground focus:shadow-card-lg focus:ring-2 focus:ring-ring"
+      >
+        Skip to main content
+      </a>
+
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -304,7 +322,7 @@ export default function Layout() {
               </div>
             )}
             <div className="min-w-0">
-              <span className="font-jakarta font-700 text-white text-[15px] tracking-tight truncate block leading-tight">
+              <span className="font-jakarta font-bold text-white text-[15px] tracking-tight truncate block leading-tight">
                 {org?.name || 'Skills Matrix App'}
               </span>
               <span className="text-[11px] text-sidebar-foreground/60 font-medium tracking-wide uppercase">
@@ -404,7 +422,7 @@ export default function Layout() {
         {/* Top bar */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 shrink-0 shadow-card">
           {/* Left: mobile menu + page title */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setSidebarOpen(true)}
@@ -412,11 +430,15 @@ export default function Layout() {
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
-            <div className="hidden lg:block">
-              <h1 className="font-jakarta text-xl font-700 text-foreground leading-tight">{pageTitle}</h1>
-            </div>
-            <div className="lg:hidden">
-              <h1 className="font-jakarta text-lg font-700 text-foreground leading-tight">{pageTitle}</h1>
+            <div className="min-w-0">
+              <h1 className="font-jakarta text-lg lg:text-xl font-bold text-foreground leading-tight truncate">
+                {pageMeta.title || pageTitle}
+              </h1>
+              {pageMeta.subtitle && (
+                <p className="text-xs text-muted-foreground leading-tight truncate hidden sm:block">
+                  {pageMeta.subtitle}
+                </p>
+              )}
             </div>
           </div>
 
@@ -440,8 +462,8 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="w-full px-4 lg:px-6 py-6 animate-fade-in">
+        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col">
+          <div className="w-full px-4 lg:px-6 py-6 animate-fade-in flex-1">
             <Outlet />
           </div>
           <SiteFooter />

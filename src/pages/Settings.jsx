@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { usePageMeta } from '@/lib/pageMeta';
 
 // Org deletion confirmation modal
 function DeleteOrgModal({ orgName, onConfirm, onClose }) {
@@ -263,15 +264,12 @@ export default function Settings() {
     }
   };
 
+  usePageMeta({ subtitle: 'Organisation, notifications, subscription' });
+
   if (!org) return null;
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your organisation settings</p>
-      </div>
-
       {/* Tab nav */}
       <div className="flex gap-1 border-b border-border">
         {[{ id: 'general', label: 'General' }, { id: 'billing', label: 'Subscription & Billing' }].map(tab => (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Users2, Search, ChevronDown, ChevronUp, ExternalLink,
   AlertTriangle, Clock, CheckCircle2, MinusCircle, Shield,
@@ -12,8 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/EmptyState';
+import RAGBar from '@/components/RAGBar';
 import { getRAGStatus, getProficiencyLabel } from '@/lib/ragUtils';
 import { getLatestAssessments } from '@/utils/assessmentUtils';
+import { usePageMeta } from '@/lib/pageMeta';
 
 // ─── RAG config ─────────────────────────────────────────────────────────────
 const RAG = {
@@ -200,6 +202,16 @@ function PersonCard({ person, personSkills, categories, skills, teamNames }) {
           </div>
         </div>
 
+        {/* Required-skill mix — turns the card's empty middle into information */}
+        {(ragCounts.green + ragCounts.amber + ragCounts.red + ragCounts.grey) > 0 && (
+          <div className="hidden lg:block w-44 shrink-0">
+            <RAGBar green={ragCounts.green} amber={ragCounts.amber} red={ragCounts.red} grey={ragCounts.grey} />
+            <p className="text-2xs text-muted-foreground mt-1.5 text-center">
+              {ragCounts.green + ragCounts.amber + ragCounts.red + ragCounts.grey} required skills
+            </p>
+          </div>
+        )}
+
         {/* Compliance ring */}
         <ComplianceRing pct={pct} />
 
@@ -207,18 +219,21 @@ function PersonCard({ person, personSkills, categories, skills, teamNames }) {
         <div className="flex items-center gap-1 shrink-0">
           <Link
             to={`/users/${person.userId}`}
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={e => e.stopPropagation()}
-            title="Full profile"
+            title={`Open ${person.name}'s full profile`}
+            aria-label={`Open ${person.name}'s full profile`}
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
           <button
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={() => setExpanded(e => !e)}
-            aria-label={expanded ? 'Collapse' : 'Expand skills'}
+            aria-expanded={expanded}
+            aria-label={expanded ? `Hide ${person.name}'s skills` : `Show ${person.name}'s skills`}
           >
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {expanded ? 'Hide skills' : 'Skills'}
+            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
@@ -273,6 +288,7 @@ function PersonCard({ person, personSkills, categories, skills, teamNames }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function People() {
   const { org, user } = useOrganisation();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [teamMembers, setTeamMembers]     = useState([]);
@@ -407,6 +423,8 @@ export default function People() {
   const activeTeamIds = new Set(teamMembers.map(m => m.team_id));
   const visibleTeams = teams.filter(t => activeTeamIds.has(t.id));
 
+  usePageMeta({ subtitle: 'Training records, lowest compliance first' });
+
   if (loading) return (
     <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
@@ -419,20 +437,14 @@ export default function People() {
     <EmptyState
       icon={Users2}
       title="No people yet"
-      description="Add employees to teams via the Skills Matrix or Teams page to see their training profiles here."
+      description="People appear here once they belong to a team. Create a team and add your employees to start tracking their training records."
+      actionLabel="Go to Teams"
+      onAction={() => navigate('/teams')}
     />
   );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Users2 className="w-6 h-6 text-primary" /> People
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Training records directory — sorted by lowest compliance first</p>
-      </div>
-
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useTierCheck from '@/hooks/useTierCheck';
 import UpgradePromptModal from '@/components/UpgradePromptModal';
+import useModal from '@/hooks/useModal';
 
 /**
  * Creates a managed Member record (no app login required).
@@ -14,6 +15,7 @@ import UpgradePromptModal from '@/components/UpgradePromptModal';
  * HR/admin can optionally invite them later to give app access.
  */
 export default function AddEmployeeModal({ orgId, teams, preselectedTeamId, onClose, onSaved }) {
+  const dialogRef = useModal(onClose);
   const { user } = useOrganisation();
   const { checkLimit, upgradePrompt, clearPrompt } = useTierCheck();
   const [form, setForm] = useState({
@@ -94,8 +96,12 @@ export default function AddEmployeeModal({ orgId, teams, preselectedTeamId, onCl
   return (
     <>
     {upgradePrompt && <UpgradePromptModal prompt={upgradePrompt} onClose={clearPrompt} />}
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1} className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <UserPlus className="w-4 h-4 text-primary" />
@@ -104,7 +110,14 @@ export default function AddEmployeeModal({ orgId, teams, preselectedTeamId, onCl
               <p className="text-xs text-muted-foreground">No app login required — HR manages their record</p>
             </div>
           </div>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">

@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useTierCheck from '@/hooks/useTierCheck';
 import UpgradePromptModal from '@/components/UpgradePromptModal';
+import useModal from '@/hooks/useModal';
 
 export default function InviteUserModal({ orgId, teams, onClose, onSaved }) {
+  const dialogRef = useModal(onClose);
   const { user } = useOrganisation();
   const { checkLimit, upgradePrompt, clearPrompt } = useTierCheck();
   const [email, setEmail] = useState('');
@@ -56,11 +58,22 @@ export default function InviteUserModal({ orgId, teams, onClose, onSaved }) {
   return (
     <>
     {upgradePrompt && <UpgradePromptModal prompt={upgradePrompt} onClose={clearPrompt} />}
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1} className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h2 className="text-base font-semibold">Invite User</h2>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, CreditCard, Download, Loader2, Check, ExternalLink, Settings, ShieldCheck, ArrowRight } from 'lucide-react';
+import { CreditCard, Download, Loader2, Check, Settings, ShieldCheck, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { TIER_LABELS, TIER_PRICING, TIER_LIMITS, TIER_FEATURES, BRC_PRICING } from '@/lib/tierConfig';

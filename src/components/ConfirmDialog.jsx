@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import useModal from '@/hooks/useModal';
 
 /**
  * ConfirmDialog — reusable confirmation modal.
@@ -21,10 +22,15 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }) {
+  const dialogRef = useModal(onCancel);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={event => { if (event.target === event.currentTarget) onCancel(); }}>
       <div
-        className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-card-lg p-6 space-y-4"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-card-lg p-6 space-y-4 max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div>

@@ -1,26 +1,39 @@
 import { Link } from 'react-router-dom';
 
-export default function SiteFooter() {
-  return (
-    <footer className="border-t border-border bg-card mt-auto">
-      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          {/* Company info */}
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p className="font-semibold text-foreground">Conryx Ltd</p>
-            <p>Company No: [PLACEHOLDER] · ICO Reg: [PLACEHOLDER]</p>
-            <p>[Registered Office Address, England]</p>
-            <p>© {new Date().getFullYear()} Conryx Ltd. All rights reserved.</p>
-          </div>
+// Company registration details. Leave a value empty until it is confirmed —
+// empty values are omitted rather than rendered as a placeholder.
+const COMPANY = {
+  name: 'Conryx Ltd',
+  companyNumber: '',
+  icoRegistration: '',
+  registeredOffice: '',
+};
 
-          {/* Legal links */}
-          <nav className="flex flex-wrap gap-x-4 gap-y-1">
-            {[
-              { label: 'Privacy Policy', to: '/privacy' },
-              { label: 'Terms of Service', to: '/terms' },
-              { label: 'Cookie Policy', to: '/cookies' },
-              { label: 'Data Processing Agreement', to: '/dpa' },
-            ].map(({ label, to }) => (
+const LEGAL_LINKS = [
+  { label: 'Privacy', to: '/privacy' },
+  { label: 'Terms', to: '/terms' },
+  { label: 'Cookies', to: '/cookies' },
+  { label: 'Data Processing', to: '/dpa' },
+];
+
+export default function SiteFooter() {
+  const registration = [
+    COMPANY.companyNumber && `Company No: ${COMPANY.companyNumber}`,
+    COMPANY.icoRegistration && `ICO Reg: ${COMPANY.icoRegistration}`,
+  ].filter(Boolean).join(' · ');
+
+  return (
+    <footer className="border-t border-border bg-card mt-auto print:hidden">
+      <div className="w-full px-4 lg:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} {COMPANY.name}
+            {registration && <span className="hidden md:inline"> · {registration}</span>}
+            {COMPANY.registeredOffice && <span className="hidden lg:inline"> · {COMPANY.registeredOffice}</span>}
+          </p>
+
+          <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">
+            {LEGAL_LINKS.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}

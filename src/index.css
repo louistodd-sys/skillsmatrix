@@ -142,11 +142,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Enforce minimum readable font size */
-  :root {
-    font-size: 14px;
-  }
-
   /* Brand heading font */
   h1, h2, h3 {
     font-family: var(--font-jakarta);
@@ -160,6 +155,19 @@
     font-weight: 600;
     line-height: 1.4;
   }
+}
+
+@layer components {
+  /* Matrix rows need FULLY OPAQUE backgrounds: the frozen name and compliance
+     columns sit on top of the scrolling cells, so any transparency lets the
+     content underneath bleed through. */
+  .matrix-row-even { background-color: hsl(var(--card)); }
+  .matrix-row-odd  { background-color: hsl(220 20% 97%); }
+  .matrix-cell     { transition: background-color 120ms ease; }
+  tr.group:hover .matrix-cell { background-color: hsl(197 55% 94%); }
+
+  .dark .matrix-row-odd { background-color: hsl(222 47% 12%); }
+  .dark tr.group:hover .matrix-cell { background-color: hsl(217 33% 20%); }
 }
 
 @layer utilities {
@@ -176,5 +184,67 @@
   @keyframes page-in {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ── Print ───────────────────────────────────────────────────────────────
+   Printing (or "Save as PDF") is how most training records get filed and
+   shared, so the app chrome drops away and the matrix prints in full colour
+   across as many pages as it needs. */
+@media print {
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+
+  body,
+  #root > div,
+  main {
+    background: #ffffff !important;
+  }
+
+  /* Sidebar, top bar and notification panel are screen-only */
+  aside,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Unlock the app shell's fixed-height scroll containers */
+  html, body, #root,
+  #root > div,
+  main {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* The matrix prints whole rather than inside its scroll viewport */
+  .matrix-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Sticky positioning confuses print layout */
+  th, td {
+    position: static !important;
+  }
+
+  /* RAG colour is the whole point of the report — keep it */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

@@ -8,7 +8,7 @@ export default function EmptyState({ icon: Icon, title, description, actionLabel
           <Icon className="w-8 h-8 text-primary/70" />
         </div>
       )}
-      <h3 className="font-jakarta text-xl font-700 text-foreground">{title}</h3>
+      <h3 className="font-jakarta text-xl font-bold text-foreground">{title}</h3>
       <p className="text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">{description}</p>
       <div className="flex items-center gap-3 mt-6">
         {actionLabel && (

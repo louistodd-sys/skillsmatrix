@@ -5,6 +5,7 @@ import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import useModal from '@/hooks/useModal';
 
 /**
  * Edit the display name and email of a managed employee.
@@ -12,6 +13,7 @@ import { Label } from '@/components/ui/label';
  * so the denormalised name stays consistent across the app.
  */
 export default function EditEmployeeModal({ userId, currentName, currentEmail, orgId, onClose, onSaved }) {
+  const dialogRef = useModal(onClose);
   const { user } = useOrganisation();
   const [form, setForm] = useState({
     name:  currentName  || '',
@@ -63,9 +65,13 @@ export default function EditEmployeeModal({ userId, currentName, currentEmail, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div
-        className="bg-card rounded-xl border border-border shadow-xl w-full max-w-sm mx-4"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="bg-card rounded-xl border border-border shadow-xl w-full max-w-sm mx-4 max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -73,7 +79,14 @@ export default function EditEmployeeModal({ userId, currentName, currentEmail, o
             <UserCog className="w-4 h-4 text-primary" />
             <h2 className="text-base font-semibold">Edit Employee</h2>
           </div>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
