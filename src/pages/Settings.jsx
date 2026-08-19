@@ -90,7 +90,7 @@ const TIMEZONES = [
 ];
 
 export default function Settings() {
-  const { org, refreshOrg } = useOrganisation();
+  const { org, user, refreshOrg } = useOrganisation();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') === 'billing' ? 'billing' : 'general';
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -268,6 +268,19 @@ export default function Settings() {
 
   if (!org) return null;
 
+  // Defence in depth alongside the admin route guard: organisation settings,
+  // exports, imports and deletion are admin-only.
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="max-w-md bg-card border border-border rounded-xl p-8 text-center space-y-2">
+        <h1 className="text-lg font-semibold text-foreground">Admin access required</h1>
+        <p className="text-sm text-muted-foreground">
+          Organisation settings can only be managed by an admin.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Tab nav */}
@@ -371,35 +384,37 @@ export default function Settings() {
       </section>
 
       {/* Notifications */}
+      {/* Email reminders are not built yet — these controls are disabled and
+          labelled honestly rather than pretending emails will be sent. Re-enable
+          them together with the scheduled expiry-reminder engine, never before. */}
       <section className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <h2 className="text-base font-semibold">Notifications</h2>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold">Notifications</h2>
+          <span className="text-[10px] font-bold uppercase tracking-wide bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Coming soon</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Automatic expiry reminder emails are in development. Until they ship, expiring and
+          expired skills are highlighted on the dashboard, matrix and gap analysis — check
+          the dashboard regularly for anything due.
+        </p>
+        <div className="flex items-center justify-between gap-4 opacity-60">
           <div>
             <Label>Notify Users on Skill Expiry</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
               Send expiry warnings directly to the employee (in addition to managers and admins)
             </p>
           </div>
-          <Switch
-            checked={form.notify_users_on_expiry}
-            onCheckedChange={v => setForm({ ...form, notify_users_on_expiry: v })}
-          />
+          <Switch checked={false} disabled aria-label="Not available yet" />
         </div>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 opacity-60">
           <div>
             <Label>Weekly Expiry Digest</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
               Send a Monday morning summary of all expiring skills to admins and managers
             </p>
           </div>
-          <Switch
-            checked={form.weekly_digest_enabled}
-            onCheckedChange={v => setForm({ ...form, weekly_digest_enabled: v })}
-          />
+          <Switch checked={false} disabled aria-label="Not available yet" />
         </div>
-        <Button onClick={handleSave} disabled={saving} variant="outline" size="sm">
-          {saving ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</> : 'Save Notification Settings'}
-        </Button>
       </section>
 
       {/* Modules */}

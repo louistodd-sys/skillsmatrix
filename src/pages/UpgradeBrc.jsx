@@ -12,7 +12,7 @@ import { BRC_PRICING } from '@/lib/tierConfig';
 
 const FEATURES = [
   { icon: ShieldCheck,   label: 'Audit-readiness dashboard',         desc: 'Real-time RAG status across all BRC clauses.' },
-  { icon: FileText,      label: 'Document control register',          desc: 'Version-controlled procedures, policies, and forms.' },
+  { icon: FileText,      label: 'Document register',                  desc: 'Track procedures, policies, and forms with review dates.' },
   { icon: ClipboardList, label: 'Internal audit scheduling',          desc: 'Plan, conduct, and record internal audits.' },
   { icon: AlertTriangle, label: 'Non-conformance & CAPA workflow',    desc: 'Track NCs from detection to close-out.' },
   { icon: Truck,         label: 'Supplier approval register',         desc: 'Manage and evidence supplier approvals.' },

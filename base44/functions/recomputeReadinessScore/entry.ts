@@ -76,13 +76,16 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const { organisation_id } = body;
 
-  // If a specific org is requested, require authentication
-  if (organisation_id && !user) {
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const isScheduler = !!cronSecret && req.headers.get('x-cron-secret') === cronSecret;
+
+  if (!user && !isScheduler) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // If called by an authenticated user, scope to their org
-  const targetOrgId = organisation_id || (user ? user.organisation_id : null);
+  // An authenticated user may only recompute their own organisation — the
+  // requested organisation_id is honoured only for scheduler calls.
+  const targetOrgId = user ? user.organisation_id : organisation_id || null;
 
   if (targetOrgId) {
     // Single org

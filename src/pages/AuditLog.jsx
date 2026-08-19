@@ -79,7 +79,10 @@ export default function AuditLog() {
     return 'bg-gray-100 text-gray-700';
   };
 
-  usePageMeta({ subtitle: 'Tamper-evident record of all significant actions' });
+  // Don't claim "tamper-evident" — entries are ordinary records with no hash
+  // chain or server-side write path yet. Reinstate stronger wording only when
+  // that's true.
+  usePageMeta({ subtitle: 'Record of significant actions across your organisation' });
 
   if (loading) return (
     <div className="space-y-3">

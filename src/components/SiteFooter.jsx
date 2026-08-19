@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
 
-// Company registration details. Leave a value empty until it is confirmed —
-// empty values are omitted rather than rendered as a placeholder.
+// Company registration details. Empty values are omitted from the footer
+// rather than rendered as blank placeholders.
+//
+// ACTION REQUIRED BEFORE LAUNCH: fill in the real Companies House number,
+// ICO registration number and registered office for Conryx Ltd. A UK
+// compliance product with missing statutory details undermines buyer trust,
+// and the ICO registration is a legal requirement for a data controller.
 const COMPANY = {
   name: 'Conryx Ltd',
   companyNumber: '',
