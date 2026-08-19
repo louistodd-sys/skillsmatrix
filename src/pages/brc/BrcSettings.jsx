@@ -8,6 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BRC_STANDARD_LABELS } from '@/lib/brcModuleGuard';
 
+// Only standards with a seeded clause library are selectable — offering the
+// others produced an empty module and a 0% score with no explanation.
+const AVAILABLE_STANDARDS = new Set(['brcgs_packaging']);
+
 function BrcSettingsContent() {
   const { org, user, refreshOrg } = useOrganisation();
   const [form, setForm] = useState({ brc_standard: '', brc_audit_target_date: '' });
@@ -15,6 +19,33 @@ function BrcSettingsContent() {
   const [saved, setSaved] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
+  const [clauseCount, setClauseCount] = useState(null);
+  const [loadingClauses, setLoadingClauses] = useState(false);
+  const [clauseResult, setClauseResult] = useState(null);
+
+  // How many clauses exist for the selected standard — drives the
+  // "Load clause library" prompt below.
+  useEffect(() => {
+    const std = form.brc_standard;
+    if (!std) { setClauseCount(null); return; }
+    base44.entities.BRCClause.filter({ standard: std }, 'display_order', 500)
+      .then(rows => setClauseCount(rows.length))
+      .catch(() => setClauseCount(null));
+  }, [form.brc_standard]);
+
+  const handleLoadClauses = async () => {
+    setLoadingClauses(true);
+    setClauseResult(null);
+    try {
+      const res = await base44.functions.invoke('seedBrcClauses', { standard: form.brc_standard || 'brcgs_packaging' });
+      setClauseResult(res.data);
+      const rows = await base44.entities.BRCClause.filter({ standard: form.brc_standard || 'brcgs_packaging' }, 'display_order', 500);
+      setClauseCount(rows.length);
+    } catch {
+      setClauseResult({ success: false, message: 'Failed to load the clause library — please try again.' });
+    }
+    setLoadingClauses(false);
+  };
 
   useEffect(() => {
     if (org) {
@@ -66,10 +97,31 @@ function BrcSettingsContent() {
           >
             <option value="">— Select standard —</option>
             {Object.entries(BRC_STANDARD_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
+              <option key={val} value={val} disabled={!AVAILABLE_STANDARDS.has(val)}>
+                {label}{AVAILABLE_STANDARDS.has(val) ? '' : ' (coming soon)'}
+              </option>
             ))}
           </select>
         </div>
+
+        {/* Clause library status for the selected standard */}
+        {form.brc_standard && clauseCount === 0 && (
+          <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-amber-50 border border-amber-200 text-amber-800">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+            <div className="flex-1">
+              <p className="font-medium">No clause library loaded for this standard</p>
+              <p className="text-xs mt-0.5">The clause mapping, checklist and readiness score need the standard's clauses. Load them once — this doesn't touch any of your own data.</p>
+              <Button size="sm" variant="outline" className="mt-2" onClick={handleLoadClauses} disabled={loadingClauses}>
+                {loadingClauses ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Loading…</> : 'Load clause library'}
+              </Button>
+            </div>
+          </div>
+        )}
+        {clauseResult && (
+          <p className={`text-xs ${clauseResult.success === false ? 'text-red-600' : 'text-green-700'}`}>
+            {clauseResult.message || (clauseResult.count ? `${clauseResult.count} clauses loaded.` : 'Clause library loaded.')}
+          </p>
+        )}
 
         <div>
           <Label>Target Audit Date</Label>

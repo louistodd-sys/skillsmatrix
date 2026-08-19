@@ -69,17 +69,24 @@ As a `viewer` user in Org B, from the console:
       function; direct writes must be closed).
 - [ ] `base44.entities.Organisation.update('<ORG_B_ID>', { subscription_tier: 'scale' })` → must fail.
 
-## 4. Scheduled function secret
+## 4. Scheduled function secret & automations
 
-`checkTrialEnding` and `recomputeReadinessScore` now require either an
-authenticated caller or an `x-cron-secret` header matching the `CRON_SECRET`
-environment variable:
+`checkTrialEnding`, `recomputeReadinessScore` and `sendExpiryReminders` require
+either an authenticated caller or an `x-cron-secret` header matching the
+`CRON_SECRET` environment variable:
 
 - [ ] Set `CRON_SECRET` (a long random string) in the Base44 dashboard's function
       environment variables.
-- [ ] Configure the scheduled automations to send the `x-cron-secret` header.
+- [ ] Configure these scheduled automations, each sending the `x-cron-secret` header:
+      - `sendExpiryReminders` with `{ "mode": "daily" }` — daily (e.g. 07:00) —
+        expiry warnings and expired alerts
+      - `sendExpiryReminders` with `{ "mode": "digest" }` — Mondays (e.g. 08:00) —
+        the weekly expiry digest
+      - `checkTrialEnding` — daily — trial-ending emails
+      - `recomputeReadinessScore` (no body) — nightly — BRC readiness scores
       Until both are done, the functions simply refuse unauthenticated calls —
-      they fail closed, so scheduled runs will 403 rather than leak.
+      they fail closed, so scheduled runs will 403 rather than leak. Admins can
+      also trigger a reminder run manually from Settings → Notifications.
 
 ## 5. Known client-side-only gates (server work still pending — P1)
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Grid3X3, Search, Users, ChevronDown, ChevronUp, Download, Printer,
   SlidersHorizontal, X, Info,
@@ -144,7 +144,11 @@ export default function SkillsMatrix() {
       base44.entities.TeamMember.filter({ organisation_id: org.id }),
       base44.entities.Skill.filter({ organisation_id: org.id, status: 'active' }),
       base44.entities.SkillCategory.filter({ organisation_id: org.id }),
-      base44.entities.SkillAssessment.filter({ organisation_id: org.id }),
+      // Newest-first with a bound: the assessment table is append-only history
+      // and only the latest per person×skill matters here. If an org ever
+      // exceeds the bound, pairs whose latest record falls outside it render
+      // as "not assessed" (prompting re-assessment) rather than stale-green.
+      base44.entities.SkillAssessment.filter({ organisation_id: org.id }, '-assessed_date', 10000),
       base44.entities.TeamRequiredSkill.filter({ organisation_id: org.id }),
     ]);
     setTeams(t);
@@ -165,54 +169,143 @@ export default function SkillsMatrix() {
   const currentAssessments = useMemo(() => getLatestAssessments(assessments), [assessments]);
 
   // ── Members ─────────────────────────────────────────────────────────────
-  let filteredMembers = members;
-  if (selectedTeam !== 'all') {
-    const ids = new Set(members.filter(m => m.team_id === selectedTeam).map(m => m.user_id));
-    filteredMembers = members.filter(m => ids.has(m.user_id));
-  }
-  const memberMap = {};
-  filteredMembers.forEach(m => { if (!memberMap[m.user_id]) memberMap[m.user_id] = m; });
-  let uniqueMembers = Object.values(memberMap);
-  uniqueMembers.sort((a, b) => (a.user_name || '').localeCompare(b.user_name || ''));
-  const totalMembers = uniqueMembers.length;
-  if (searchMember) {
-    uniqueMembers = uniqueMembers.filter(m =>
-      (m.user_name || '').toLowerCase().includes(searchMember.toLowerCase())
-    );
-  }
+  // Debounce the people search so the member×skill grid below isn't rebuilt
+  // on every keystroke.
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchMember), 200);
+    return () => clearTimeout(t);
+  }, [searchMember]);
 
-  // Requirement lookup
-  const getReq = (userId, skillId) => {
-    if (selectedTeam !== 'all')
-      return reqSkills.find(r => r.team_id === selectedTeam && r.skill_id === skillId);
-    const tm = members.find(m => m.user_id === userId);
-    return tm ? reqSkills.find(r => r.team_id === tm.team_id && r.skill_id === skillId) : undefined;
-  };
+  const { uniqueMembers, totalMembers } = useMemo(() => {
+    let filtered = members;
+    if (selectedTeam !== 'all') {
+      const ids = new Set(members.filter(m => m.team_id === selectedTeam).map(m => m.user_id));
+      filtered = members.filter(m => ids.has(m.user_id));
+    }
+    const memberMap = {};
+    filtered.forEach(m => { if (!memberMap[m.user_id]) memberMap[m.user_id] = m; });
+    let unique = Object.values(memberMap)
+      .sort((a, b) => (a.user_name || '').localeCompare(b.user_name || ''));
+    const total = unique.length;
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      unique = unique.filter(m => (m.user_name || '').toLowerCase().includes(q));
+    }
+    return { uniqueMembers: unique, totalMembers: total };
+  }, [members, selectedTeam, debouncedSearch]);
+
+  // Requirement lookup — precomputed maps so each cell is O(1) instead of a
+  // linear scan over reqSkills (and, in all-teams mode, over members too).
+  const reqLookup = useMemo(() => {
+    const byTeamSkill = new Map();
+    for (const r of reqSkills) byTeamSkill.set(`${r.team_id}:${r.skill_id}`, r);
+    const teamByUser = new Map();
+    for (const m of members) if (!teamByUser.has(m.user_id)) teamByUser.set(m.user_id, m.team_id);
+    return { byTeamSkill, teamByUser };
+  }, [reqSkills, members]);
+
+  const getReq = useCallback((userId, skillId) => {
+    if (selectedTeam !== 'all') return reqLookup.byTeamSkill.get(`${selectedTeam}:${skillId}`);
+    const teamId = reqLookup.teamByUser.get(userId);
+    return teamId ? reqLookup.byTeamSkill.get(`${teamId}:${skillId}`) : undefined;
+  }, [selectedTeam, reqLookup]);
+
+  const computeStatus = useCallback((member, skill) =>
+    getRAGStatus(currentAssessments[`${member.user_id}-${skill.id}`], skill, getReq(member.user_id, skill.id)),
+  [currentAssessments, getReq]);
 
   // ── Skills ──────────────────────────────────────────────────────────────
-  let visibleSkills = skills;
-  if (filterCategory !== 'all') {
-    visibleSkills = visibleSkills.filter(s => s.category_id === filterCategory);
-  }
-  if (showOnlyRequired && selectedTeam !== 'all') {
-    const reqIds = new Set(
-      reqSkills.filter(r => r.team_id === selectedTeam && r.is_required).map(r => r.skill_id)
-    );
-    visibleSkills = visibleSkills.filter(s => reqIds.has(s.id));
-  }
-  if (showOnlyExpiring) {
-    visibleSkills = visibleSkills.filter(s =>
-      uniqueMembers.some(m => {
-        const st = getRAGStatus(currentAssessments[`${m.user_id}-${s.id}`], s, getReq(m.user_id, s.id));
-        return st === 'amber' || st === 'red';
-      })
-    );
-  }
+  const { groupedSkills, allVisibleSkills } = useMemo(() => {
+    let visibleSkills = skills;
+    if (filterCategory !== 'all') {
+      visibleSkills = visibleSkills.filter(s => s.category_id === filterCategory);
+    }
+    if (showOnlyRequired && selectedTeam !== 'all') {
+      const reqIds = new Set(
+        reqSkills.filter(r => r.team_id === selectedTeam && r.is_required).map(r => r.skill_id)
+      );
+      visibleSkills = visibleSkills.filter(s => reqIds.has(s.id));
+    }
+    if (showOnlyExpiring) {
+      visibleSkills = visibleSkills.filter(s =>
+        uniqueMembers.some(m => {
+          const st = computeStatus(m, s);
+          return st === 'amber' || st === 'red';
+        })
+      );
+    }
+    const grouped = categories
+      .map(cat => ({ ...cat, skills: visibleSkills.filter(s => s.category_id === cat.id) }))
+      .filter(g => g.skills.length > 0);
+    return { groupedSkills: grouped, allVisibleSkills: grouped.flatMap(g => g.skills) };
+  }, [skills, categories, filterCategory, showOnlyRequired, showOnlyExpiring, selectedTeam, reqSkills, uniqueMembers, computeStatus]);
 
-  const groupedSkills = categories
-    .map(cat => ({ ...cat, skills: visibleSkills.filter(s => s.category_id === cat.id) }))
-    .filter(g => g.skills.length > 0);
-  const allVisibleSkills = groupedSkills.flatMap(g => g.skills);
+  // ── Status grid + derived stats (memoised — computed once per data/filter
+  //    change, not on every render of every cell) ──────────────────────────
+  const statusGrid = useMemo(() => {
+    const grid = new Map();
+    for (const m of uniqueMembers) {
+      for (const s of allVisibleSkills) {
+        grid.set(`${m.user_id}:${s.id}`, computeStatus(m, s));
+      }
+    }
+    return grid;
+  }, [uniqueMembers, allVisibleSkills, computeStatus]);
+
+  const statusFor = useCallback((member, skill) =>
+    statusGrid.get(`${member.user_id}:${skill.id}`) ?? computeStatus(member, skill),
+  [statusGrid, computeStatus]);
+
+  // Per-skill coverage % (column totals)
+  const skillCompliance = useMemo(() => {
+    const out = {};
+    allVisibleSkills.forEach(skill => {
+      let green = 0;
+      uniqueMembers.forEach(m => { if (statusFor(m, skill) === 'green') green++; });
+      out[skill.id] = uniqueMembers.length > 0
+        ? Math.round((green / uniqueMembers.length) * 100)
+        : 0;
+    });
+    return out;
+  }, [allVisibleSkills, uniqueMembers, statusFor]);
+
+  // Per-person compliance against required skills (row totals)
+  const memberSummary = useMemo(() => {
+    const out = {};
+    uniqueMembers.forEach(member => {
+      let green = 0, required = 0, gaps = 0, expiring = 0;
+      allVisibleSkills.forEach(skill => {
+        const status = statusFor(member, skill);
+        const isRequired = !!getReq(member.user_id, skill.id)?.is_required;
+        if (isRequired) {
+          required++;
+          if (status === 'green') green++;
+        }
+        if (status === 'red') gaps++;
+        if (status === 'amber') expiring++;
+      });
+      out[member.user_id] = {
+        required, green, gaps, expiring,
+        pct: required > 0 ? Math.round((green / required) * 100) : null,
+      };
+    });
+    return out;
+  }, [uniqueMembers, allVisibleSkills, statusFor, getReq]);
+
+  const overallPct = useMemo(() => {
+    let green = 0, required = 0;
+    Object.values(memberSummary).forEach(s => { green += s.green; required += s.required; });
+    return required > 0 ? Math.round((green / required) * 100) : null;
+  }, [memberSummary]);
+
+  // Row cap: render the first chunk immediately and offer "show all" — a
+  // Scale-tier org (250 people × a mature library) would otherwise mount
+  // tens of thousands of tooltip-wrapped buttons in one commit.
+  const ROW_CAP = 60;
+  const [showAllRows, setShowAllRows] = useState(false);
+  const visibleRows = showAllRows ? uniqueMembers : uniqueMembers.slice(0, ROW_CAP);
+  const hiddenRowCount = uniqueMembers.length - visibleRows.length;
 
   const teamName = selectedTeam === 'all'
     ? 'All teams'
@@ -285,46 +378,6 @@ export default function SkillsMatrix() {
       />
     );
   }
-
-  // ── Derived stats ───────────────────────────────────────────────────────
-  const statusFor = (member, skill) =>
-    getRAGStatus(currentAssessments[`${member.user_id}-${skill.id}`], skill, getReq(member.user_id, skill.id));
-
-  // Per-skill coverage % (column totals)
-  const skillCompliance = {};
-  allVisibleSkills.forEach(skill => {
-    let green = 0;
-    uniqueMembers.forEach(m => { if (statusFor(m, skill) === 'green') green++; });
-    skillCompliance[skill.id] = uniqueMembers.length > 0
-      ? Math.round((green / uniqueMembers.length) * 100)
-      : 0;
-  });
-
-  // Per-person compliance against required skills (row totals)
-  const memberSummary = {};
-  uniqueMembers.forEach(member => {
-    let green = 0, required = 0, gaps = 0, expiring = 0;
-    allVisibleSkills.forEach(skill => {
-      const status = statusFor(member, skill);
-      const isRequired = !!getReq(member.user_id, skill.id)?.is_required;
-      if (isRequired) {
-        required++;
-        if (status === 'green') green++;
-      }
-      if (status === 'red') gaps++;
-      if (status === 'amber') expiring++;
-    });
-    memberSummary[member.user_id] = {
-      required, green, gaps, expiring,
-      pct: required > 0 ? Math.round((green / required) * 100) : null,
-    };
-  });
-
-  const overallPct = (() => {
-    let green = 0, required = 0;
-    Object.values(memberSummary).forEach(s => { green += s.green; required += s.required; });
-    return required > 0 ? Math.round((green / required) * 100) : null;
-  })();
 
   const activeFilterCount =
     (filterCategory !== 'all' ? 1 : 0) +
@@ -482,7 +535,21 @@ export default function SkillsMatrix() {
           <Button type="button" variant="outline" size="sm" className="h-9" onClick={handleExportCSV}>
             <Download className="w-3.5 h-3.5 mr-1.5" /> Export CSV
           </Button>
-          <Button type="button" variant="outline" size="sm" className="h-9" onClick={() => window.print()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={() => {
+              // Printing must include every row, not just the capped first chunk.
+              if (hiddenRowCount > 0) {
+                setShowAllRows(true);
+                setTimeout(() => window.print(), 150);
+              } else {
+                window.print();
+              }
+            }}
+          >
             <Printer className="w-3.5 h-3.5 mr-1.5" /> Print
           </Button>
         </div>
@@ -669,7 +736,7 @@ export default function SkillsMatrix() {
                   </tr>
                 )}
 
-                {uniqueMembers.map((member, ri) => {
+                {visibleRows.map((member, ri) => {
                   const summary = memberSummary[member.user_id];
                   const rowBg = ri % 2 === 0 ? 'matrix-row-even' : 'matrix-row-odd';
                   return (
@@ -929,6 +996,18 @@ export default function SkillsMatrix() {
         </div>
       </div>
 
+      {/* Row cap notice — applies to both layouts */}
+      {hiddenRowCount > 0 && (
+        <div className="flex items-center justify-center gap-3 py-2 print:hidden">
+          <p className="text-xs text-muted-foreground">
+            Showing the first {visibleRows.length} of {uniqueMembers.length} people for speed.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => setShowAllRows(true)}>
+            Show all {uniqueMembers.length}
+          </Button>
+        </div>
+      )}
+
       {/* ── Mobile: card per person ── */}
       <div className="md:hidden space-y-3">
         {uniqueMembers.length === 0 && (
@@ -936,7 +1015,7 @@ export default function SkillsMatrix() {
             No people match your filters.
           </p>
         )}
-        {uniqueMembers.map(member => {
+        {visibleRows.map(member => {
           const summary = memberSummary[member.user_id];
           let g = 0, a = 0, r = 0, gr = 0;
           allVisibleSkills.forEach(skill => {

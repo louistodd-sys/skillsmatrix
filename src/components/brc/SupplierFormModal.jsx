@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import EvidenceSection from '@/components/EvidenceSection';
 
 const CATEGORIES = ['raw_material','packaging','service','logistics','utilities','other'];
 const STATUSES = ['approved','conditional','unapproved','suspended','under_review'];
@@ -108,6 +109,7 @@ export default function SupplierFormModal({ org, supplier, onClose, onSaved }) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notes</label>
             <textarea className="mt-1 w-full h-16 rounded-md border border-input bg-background px-3 py-2 text-sm resize-none" value={form.notes || ''} onChange={e => set('notes', e.target.value)} />
           </div>
+          {supplier?.id && <EvidenceSection linkedEntityType="supplier_record" linkedEntityId={supplier.id} />}
         </div>
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-border">
           <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>

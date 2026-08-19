@@ -108,6 +108,7 @@ export default function Settings() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
   const [usage, setUsage]             = useState({ users: 0, employees: 0, teams: 0, skills: 0 });
   const [usageLoaded, setUsageLoaded] = useState(false);
 
@@ -383,37 +384,62 @@ export default function Settings() {
         </Button>
       </section>
 
-      {/* Notifications */}
-      {/* Email reminders are not built yet — these controls are disabled and
-          labelled honestly rather than pretending emails will be sent. Re-enable
-          them together with the scheduled expiry-reminder engine, never before. */}
+      {/* Notifications — backed by the sendExpiryReminders engine (daily +
+          Monday digest). The scheduled automation must be configured in the
+          Base44 dashboard for these to fire automatically; "Send reminders
+          now" runs the same engine on demand. */}
       <section className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold">Notifications</h2>
-          <span className="text-[10px] font-bold uppercase tracking-wide bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Coming soon</span>
-        </div>
+        <h2 className="text-base font-semibold">Notifications</h2>
         <p className="text-xs text-muted-foreground">
-          Automatic expiry reminder emails are in development. Until they ship, expiring and
-          expired skills are highlighted on the dashboard, matrix and gap analysis — check
-          the dashboard regularly for anything due.
+          The daily reminder job alerts managers and admins as skills approach each warning
+          threshold, and emails admins when something expires. Reminders appear in the bell
+          menu and by email.
         </p>
-        <div className="flex items-center justify-between gap-4 opacity-60">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <Label>Notify Users on Skill Expiry</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Send expiry warnings directly to the employee (in addition to managers and admins)
+              Also send expiry warnings directly to the employee (in addition to managers and admins)
             </p>
           </div>
-          <Switch checked={false} disabled aria-label="Not available yet" />
+          <Switch
+            checked={form.notify_users_on_expiry}
+            onCheckedChange={v => setForm({ ...form, notify_users_on_expiry: v })}
+          />
         </div>
-        <div className="flex items-center justify-between gap-4 opacity-60">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <Label>Weekly Expiry Digest</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
               Send a Monday morning summary of all expiring skills to admins and managers
             </p>
           </div>
-          <Switch checked={false} disabled aria-label="Not available yet" />
+          <Switch
+            checked={form.weekly_digest_enabled}
+            onCheckedChange={v => setForm({ ...form, weekly_digest_enabled: v })}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleSave} disabled={saving} variant="outline" size="sm">
+            {saving ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</> : 'Save Notification Settings'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={sendingReminders}
+            onClick={async () => {
+              setSendingReminders(true);
+              try {
+                const res = await base44.functions.invoke('sendExpiryReminders', { mode: 'daily' });
+                toast.success(`Reminder run complete — ${res.data?.notifications ?? 0} notifications, ${res.data?.emails ?? 0} emails.`);
+              } catch {
+                toast.error('Reminder run failed — please try again.');
+              }
+              setSendingReminders(false);
+            }}
+          >
+            {sendingReminders ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Running…</> : 'Send reminders now'}
+          </Button>
         </div>
       </section>
 
@@ -462,7 +488,7 @@ export default function Settings() {
         <BulkImportModal
           orgId={org.id}
           onClose={() => setShowBulkImport(false)}
-          onImported={() => setShowBulkImport(false)}
+          onImported={() => { /* keep the modal open so the result summary and error report stay visible */ }}
         />
       )}
 

@@ -49,8 +49,11 @@ Deno.serve(async (req) => {
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   // module is optional — defaults to "skills_matrix" for all existing call sites
-  const { resource, module: requestedModule } = await req.json();
+  // add is optional — how many of the resource the caller wants to create
+  // (bulk imports and templates pass their batch size; default 1)
+  const { resource, module: requestedModule, add: requestedAdd } = await req.json();
   const module = requestedModule || 'skills_matrix';
+  const add = Math.max(1, Math.floor(Number(requestedAdd) || 1));
 
   // Always derive orgId from the authenticated user — never trust client-supplied organisation_id
   const orgId = user.organisation_id;
@@ -97,14 +100,17 @@ Deno.serve(async (req) => {
     const cats = await base44.entities.SkillCategory.filter({ organisation_id: orgId });
     currentCount = cats.length;
     scenario = 'category_limit';
-  } else if (resource === 'manager_seat') {
-    const invitations = await base44.entities.Invitation.filter({ organisation_id: orgId, role: 'manager', status: 'accepted' });
-    currentCount = invitations.length;
-    scenario = 'manager_seat_limit';
-  } else if (resource === 'admin_seat') {
-    const invitations = await base44.entities.Invitation.filter({ organisation_id: orgId, role: 'admin', status: 'accepted' });
-    currentCount = invitations.length;
-    scenario = 'admin_seat_limit';
+  } else if (resource === 'manager_seat' || resource === 'admin_seat') {
+    // A seat is held by an actual user with the role, or reserved by a
+    // pending invitation for it. (Counting accepted invitations, as before,
+    // was always zero and made seat limits unenforceable.)
+    const role = resource === 'admin_seat' ? 'admin' : 'manager';
+    const [holders, pending] = await Promise.all([
+      base44.asServiceRole.entities.User.filter({ organisation_id: orgId, role }),
+      base44.asServiceRole.entities.Invitation.filter({ organisation_id: orgId, role, status: 'pending' }),
+    ]);
+    currentCount = holders.length + pending.length;
+    scenario = role === 'admin' ? 'admin_seat_limit' : 'manager_seat_limit';
   } else if (resource === 'csv_export') {
     const tierFeatures = { free: false, starter: true, growth: true, scale: true };
     if (!tierFeatures[tier]) {
@@ -125,10 +131,10 @@ Deno.serve(async (req) => {
 
   if (limit === null) return Response.json({ allowed: true, current: currentCount, limit: null });
 
-  if (currentCount >= limit) {
+  if (currentCount + add > limit) {
     const prompt = UPGRADE_PROMPTS[scenario]?.[tier] || null;
-    return Response.json({ allowed: false, current: currentCount, limit, upgrade_prompt: prompt });
+    return Response.json({ allowed: false, current: currentCount, limit, requested: add, upgrade_prompt: prompt });
   }
 
-  return Response.json({ allowed: true, current: currentCount, limit });
+  return Response.json({ allowed: true, current: currentCount, limit, requested: add });
 });

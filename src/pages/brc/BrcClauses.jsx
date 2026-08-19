@@ -326,7 +326,7 @@ function BrcClausesContent() {
         <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>
       ) : clauses.length === 0 ? (
         <div className="text-center py-16 text-sm text-muted-foreground">
-          No clauses found for this standard. An admin can seed clause data from the super-admin panel.
+          No clauses found for this standard. An admin can load the clause library from BRC Settings.
         </div>
       ) : sections.length === 0 ? (
         <div className="text-center py-12 text-sm text-muted-foreground">No clauses match the selected filter.</div>

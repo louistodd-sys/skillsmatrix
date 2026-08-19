@@ -31,6 +31,20 @@ async function computeForOrg(base44, orgId) {
   const orgClauses = statuses; // already org-scoped
   const statusMap = Object.fromEntries(orgClauses.map(s => [s.clause_id, s]));
 
+  // Reconcile evidence_count on every clause status from the actual links —
+  // this is the authoritative recount behind the client-side sync helper.
+  const links = await base44.asServiceRole.entities.BRCClauseEvidenceLink.filter({ organisation_id: orgId });
+  const linkCounts = {};
+  for (const link of links) {
+    linkCounts[link.clause_id] = (linkCounts[link.clause_id] || 0) + 1;
+  }
+  await Promise.all(orgClauses
+    .filter(s => (linkCounts[s.clause_id] || 0) !== (s.evidence_count || 0))
+    .map(s => base44.asServiceRole.entities.BRCClauseStatus.update(s.id, {
+      evidence_count: linkCounts[s.clause_id] || 0,
+    }))
+  );
+
   let red = 0, amber = 0, green = 0;
   const bySection = {};
 
@@ -41,8 +55,10 @@ async function computeForOrg(base44, orgId) {
     if (rag === 'amber') amber++;
     if (rag === 'green') green++;
 
-    // Group by issue_number (top section)
-    const section = clause.issue_number || 'unknown';
+    // Group by the standard's section — the leading part of the clause number
+    // ("4.6" → section "4"). issue_number is the standard issue (e.g. "7") and
+    // is the same for every clause, so it must never be the grouping key.
+    const section = String(clause.clause_number || '').split('.')[0] || 'unknown';
     if (!bySection[section]) bySection[section] = { red: 0, amber: 0, green: 0 };
     bySection[section][rag]++;
   }

@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import InvitationGate from './components/InvitationGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import Dashboard from './pages/Dashboard';
 import SkillsMatrix from './pages/SkillsMatrix';
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <>
+      <InvitationGate />
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
         {/* Legal pages — accessible without sidebar layout */}

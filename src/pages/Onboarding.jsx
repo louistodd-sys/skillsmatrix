@@ -131,6 +131,24 @@ export default function Onboarding() {
     setLoading(true);
     if (selectedTemplate) {
       const template = industryTemplates.find(t => t.id === selectedTemplate);
+      // Templates go through the same tier limits as manual creation.
+      const catCount = template?.categories?.length ?? 0;
+      const skillCount = (template?.categories ?? []).reduce((sum, c) => sum + c.skills.length, 0);
+      try {
+        const [catCheck, skillCheck] = await Promise.all([
+          base44.functions.invoke('checkTierLimit', { resource: 'category', add: catCount }),
+          base44.functions.invoke('checkTierLimit', { resource: 'skill', add: skillCount }),
+        ]);
+        if (!catCheck.data.allowed || !skillCheck.data.allowed) {
+          toast.error('This template exceeds your plan limits. Pick a higher plan in the previous step, or skip and add skills manually.');
+          setLoading(false);
+          return;
+        }
+      } catch {
+        toast.error("Couldn't verify your plan limits — please try again.");
+        setLoading(false);
+        return;
+      }
       for (const cat of (template?.categories ?? [])) {
         const newCat = await base44.entities.SkillCategory.create({
           organisation_id: orgId, name: cat.name, colour: cat.colour,

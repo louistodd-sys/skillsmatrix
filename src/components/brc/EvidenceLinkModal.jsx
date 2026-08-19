@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import useOrganisation from '@/lib/useOrganisation';
+import { createEvidenceLink } from '@/lib/brcEvidence';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Loader2, Search, CheckCircle2, Link2, FileText, ScrollText, ClipboardList, AlertTriangle, Wrench, Truck, Users2, Bug, MessageSquare } from 'lucide-react';
@@ -18,6 +20,7 @@ const TABS = [
 ];
 
 export default function EvidenceLinkModal({ clause, org, existingLinks = [], onClose, onLinked }) {
+  const { user } = useOrganisation();
   const [activeTab, setActiveTab] = useState(0);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -62,11 +65,12 @@ export default function EvidenceLinkModal({ clause, org, existingLinks = [], onC
     setSaving(true);
     try {
       await Promise.all([...selected].map(id =>
-        base44.entities.BRCClauseEvidenceLink.create({
-          organisation_id:    org.id,
-          clause_id:          clause.id,
-          linked_entity_type: tab.key,
-          linked_entity_id:   id,
+        createEvidenceLink({
+          orgId:            org.id,
+          userId:           user?.id,
+          clauseId:         clause.id,
+          linkedEntityType: tab.key,
+          linkedEntityId:   id,
         })
       ));
       toast.success(`${selected.size} item${selected.size !== 1 ? 's' : ''} linked as evidence`);

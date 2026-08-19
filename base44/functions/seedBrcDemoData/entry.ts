@@ -17,8 +17,11 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({}));
 
-  // Resolve org
-  const orgs = await base44.asServiceRole.entities.Organisation.filter({ created_by: user.email }, '-created_date', 1);
+  // Resolve org from the caller's membership — never from created_by, which
+  // targets whichever org the caller once created rather than the one they
+  // belong to now.
+  if (!user.organisation_id) return Response.json({ error: 'No organisation' }, { status: 400 });
+  const orgs = await base44.asServiceRole.entities.Organisation.filter({ id: user.organisation_id });
   const org = orgs[0];
   if (!org) return Response.json({ error: 'Organisation not found' }, { status: 404 });
   const orgId = org.id;
