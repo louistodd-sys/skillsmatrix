@@ -6,6 +6,7 @@ import { CheckSquare, Download, AlertTriangle, CheckCircle2, ChevronDown, Chevro
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { sectionName, standardLabel, standardHasFundamentals } from '@/lib/standardsRegistry';
+import { downloadCSV, exportFilename } from '@/lib/exportUtils';
 import StandardSwitcher from '@/components/brc/StandardSwitcher';
 import NCFormModal from '@/components/brc/NCFormModal';
 
@@ -205,12 +206,9 @@ function BrcAuditChecklistContent() {
       const st = statusMap[c.id];
       rows.push([c.clause_number, c.title, c.is_fundamental ? 'Yes' : 'No', st?.status || 'not_started', st?.evidence_count ?? 0, st?.notes || '']);
     });
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url; link.download = `brc-audit-checklist-${new Date().toISOString().split('T')[0]}.csv`; link.click();
-    URL.revokeObjectURL(url);
+    // Shared helper adds proper escaping, CRLF endings and the UTF-8 BOM
+    // Excel needs for non-ASCII clause text.
+    downloadCSV(exportFilename('audit-checklist', org?.brc_standard || ''), rows);
   };
 
   return (

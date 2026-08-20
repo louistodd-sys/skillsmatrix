@@ -75,8 +75,11 @@ async function processOrg(base44, org, mode, now) {
   let notificationsCreated = 0;
   let emailsSent = 0;
 
+  // dedupeKey must be globally unique per event+recipient — callers include
+  // the recipient id where a key is per-recipient. Used verbatim so the same
+  // set also serves the email-sent markers.
   const createNotification = async (userId, type, title, body, dedupeKey, link) => {
-    if (dedupeKey && existingKeys.has(`${userId}:${dedupeKey}`)) return;
+    if (dedupeKey && existingKeys.has(dedupeKey)) return;
     await svc.Notification.create({
       organisation_id: orgId,
       user_id: userId,
@@ -84,9 +87,9 @@ async function processOrg(base44, org, mode, now) {
       title,
       body,
       link: link || '/matrix',
-      dedupe_key: dedupeKey ? `${userId}:${dedupeKey}` : undefined,
+      dedupe_key: dedupeKey || undefined,
     });
-    if (dedupeKey) existingKeys.add(`${userId}:${dedupeKey}`);
+    if (dedupeKey) existingKeys.add(dedupeKey);
     notificationsCreated++;
   };
 
@@ -122,7 +125,11 @@ async function processOrg(base44, org, mode, now) {
 
     const recipients = users.filter(u => (u.role === 'admin' || u.role === 'manager') && u.status !== 'inactive');
     for (const r of recipients) {
-      await createNotification(r.id, 'expiry_digest', title, body, `digest:${weekKey}`, '/matrix');
+      // One key guards BOTH the notification and the email, so a re-run in the
+      // same week sends nothing at all to this recipient.
+      const key = `digest:${weekKey}:${r.id}`;
+      if (existingKeys.has(key)) continue;
+      await createNotification(r.id, 'expiry_digest', title, body, key, '/matrix');
       await sendEmail(r.email, `[${org.name}] ${title}`, `Hi ${r.full_name || ''},\n\n${body}\n\nOpen the matrix: /matrix\n\n— Skills Matrix App`);
     }
     return { notificationsCreated, emailsSent };
@@ -142,19 +149,24 @@ async function processOrg(base44, org, mode, now) {
       const title = `${a.user_name || 'A team member'}'s "${a.skill_name || 'skill'}" has expired`;
       const body = `Expired on ${a.expiry_date}. Book refresher training and re-assess to restore compliance.`;
       for (const rid of recipientIds) {
-        await createNotification(rid, 'expiry_warning', title, body, `expired:${a.id}`, '/matrix');
+        await createNotification(rid, 'expiry_warning', title, body, `expired:${a.id}:${rid}`, '/matrix');
       }
-      // Expiry is the one event important enough for immediate email
+      // Expiry is the one event important enough for immediate email. The
+      // marker Notification row must be CREATED (not just noted in memory)
+      // before its key enters existingKeys — otherwise the marker is skipped
+      // by createNotification's own dedupe guard and the emails re-send on
+      // every subsequent run.
       const emailKey = `expired-email:${a.id}`;
       if (!existingKeys.has(emailKey)) {
         for (const admin of admins) {
           await sendEmail(admin.email, `[${org.name}] Skill expired: ${a.user_name || ''} — ${a.skill_name || ''}`,
             `Hi ${admin.full_name || ''},\n\n${title}.\n${body}\n\n— Skills Matrix App`);
         }
-        existingKeys.add(emailKey);
-        // Persist the email marker as a self-notification on the first admin
+        // Persist the email marker (createNotification adds emailKey to the set)
         if (admins[0]) {
-          await createNotification(admins[0].id, 'expiry_warning', title, `${body} (email sent)`, `expired-email:${a.id}`, '/matrix');
+          await createNotification(admins[0].id, 'expiry_warning', title, `${body} (email sent)`, emailKey, '/matrix');
+        } else {
+          existingKeys.add(emailKey);
         }
       }
       if (org.notify_users_on_expiry) {
@@ -165,9 +177,10 @@ async function processOrg(base44, org, mode, now) {
           if (!existingKeys.has(selfKey)) {
             await sendEmail(memberEmailById[a.user_id], `[${org.name}] Your ${a.skill_name || 'skill'} certification has expired`,
               `Hi ${a.user_name || ''},\n\nYour "${a.skill_name || 'skill'}" expired on ${a.expiry_date}. Please speak to your manager about refresher training.\n\n— ${org.name} via Skills Matrix App`);
-            existingKeys.add(selfKey);
             if (admins[0]) {
               await createNotification(admins[0].id, 'expiry_warning', `Notified ${a.user_name || 'member'} of expired ${a.skill_name || 'skill'}`, 'Email sent to the team member.', selfKey, '/matrix');
+            } else {
+              existingKeys.add(selfKey);
             }
           }
         }
@@ -181,7 +194,7 @@ async function processOrg(base44, org, mode, now) {
         const title = `${a.user_name || 'A team member'}'s "${a.skill_name || 'skill'}" expires in ${d} day${d === 1 ? '' : 's'}`;
         const body = `Expires ${a.expiry_date}. Book refresher training before it lapses (${t}-day warning).`;
         for (const rid of recipientIds) {
-          await createNotification(rid, 'expiry_warning', title, body, `warn${t}:${a.id}`, '/matrix');
+          await createNotification(rid, 'expiry_warning', title, body, `warn${t}:${a.id}:${rid}`, '/matrix');
         }
         if (org.notify_users_on_expiry && loginUserIds.has(a.user_id)) {
           await createNotification(a.user_id, 'expiry_warning', `Your "${a.skill_name || 'skill'}" expires in ${d} day${d === 1 ? '' : 's'}`, body, `warn${t}-self:${a.id}`, '/my-profile');

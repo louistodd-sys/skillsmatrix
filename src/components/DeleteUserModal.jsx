@@ -8,7 +8,9 @@ import useModal from '@/hooks/useModal';
 /**
  * GDPR-compliant user deletion modal.
  * Requires typed confirmation before allowing deletion.
- * Does NOT close on backdrop click (destructive action safety).
+ * Does NOT close on backdrop click (destructive action safety) — a mis-click
+ * on the dark overlay must not throw away a typed confirmation. Closing is
+ * explicit: the X button, Cancel, or the Escape key.
  */
 export default function DeleteUserModal({ user, onConfirm, onClose }) {
   const dialogRef = useModal(onClose);
@@ -27,7 +29,7 @@ export default function DeleteUserModal({ user, onConfirm, onClose }) {
 
   return (
     // Backdrop does NOT close on click — this is a destructive action
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div
         ref={dialogRef}
         role="dialog"

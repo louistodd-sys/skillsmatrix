@@ -114,7 +114,11 @@ Deno.serve(async (req) => {
   }
 
   // An authenticated user may only recompute their own organisation — the
-  // requested organisation_id is honoured only for scheduler calls.
+  // requested organisation_id is honoured only for scheduler calls. A user
+  // with no organisation must never fall through to the all-orgs branch.
+  if (user && !user.organisation_id) {
+    return Response.json({ error: 'No organisation' }, { status: 400 });
+  }
   const targetOrgId = user ? user.organisation_id : organisation_id || null;
 
   if (targetOrgId) {

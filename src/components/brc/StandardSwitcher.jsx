@@ -23,7 +23,10 @@ export default function StandardSwitcher() {
     if (std === active || switching) return;
     setSwitching(std);
     try {
-      await base44.entities.Organisation.update(org.id, { brc_standard: std });
+      // Server-side switch — managers may change the active standard but must
+      // never gain a direct Organisation write path from the browser.
+      const res = await base44.functions.invoke('setActiveStandard', { standard: std });
+      if (res.data?.error) throw new Error(res.data.error);
       await refreshOrg();
     } catch {
       // Failed switch leaves the current standard active — nothing to clean up.

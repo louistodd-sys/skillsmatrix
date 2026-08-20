@@ -36,12 +36,18 @@ async function syncClauseStatus(orgId, clauseId) {
 }
 
 export async function createEvidenceLink({ orgId, userId, clauseId, linkedEntityType, linkedEntityId, notes }) {
+  // linked_by_user_id is schema-required — if the caller's cached user hasn't
+  // resolved yet, fetch the authenticated user rather than failing validation.
+  let linkedBy = userId;
+  if (!linkedBy) {
+    try { linkedBy = (await base44.auth.me())?.id; } catch { /* fall through */ }
+  }
   const link = await base44.entities.BRCClauseEvidenceLink.create({
     organisation_id: orgId,
     clause_id: clauseId,
     linked_entity_type: linkedEntityType,
     linked_entity_id: linkedEntityId,
-    linked_by_user_id: userId,
+    linked_by_user_id: linkedBy || 'unknown',
     ...(notes ? { notes } : {}),
   });
   await syncClauseStatus(orgId, clauseId).catch(() => {});
