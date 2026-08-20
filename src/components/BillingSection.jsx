@@ -205,7 +205,7 @@ export default function BillingSection({ org }) {
               <ShieldCheck className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">BRC Compliance Readiness</p>
+              <p className="text-sm font-semibold text-foreground">Compliance &amp; Audit Readiness</p>
               <p className="text-xs text-muted-foreground">Add-on module — purchased independently</p>
             </div>
           </div>

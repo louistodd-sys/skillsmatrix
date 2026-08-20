@@ -34,7 +34,7 @@ export default function BrcModuleGuard({ children }) {
           <Lock className="w-6 h-6 text-primary" />
         </div>
         <div>
-          <h2 className="text-xl font-bold font-jakarta text-foreground">BRC Compliance Module</h2>
+          <h2 className="text-xl font-bold font-jakarta text-foreground">Compliance &amp; Audit Readiness Module</h2>
           <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto">
             This module is not enabled for your organisation. Enable it in Settings or view the feature overview.
           </p>

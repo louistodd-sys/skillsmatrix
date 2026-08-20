@@ -1,66 +1,86 @@
 import BrcModuleGuard from '@/components/BrcModuleGuard';
-import { Settings, Loader2, Save, Database, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Settings, Loader2, Save, Database, CheckCircle2, AlertTriangle, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BRC_STANDARD_LABELS } from '@/lib/brcModuleGuard';
+import { STANDARDS } from '@/lib/standardsRegistry';
 
-// Only standards with a seeded clause library are selectable — offering the
-// others produced an empty module and a 0% score with no explanation.
-const AVAILABLE_STANDARDS = new Set(['brcgs_packaging']);
+const FAMILY_LABELS = {
+  iso: 'ISO management standards',
+  brcgs: 'BRCGS food & packaging standards',
+};
 
 function BrcSettingsContent() {
   const { org, user, refreshOrg } = useOrganisation();
-  const [form, setForm] = useState({ brc_standard: '', brc_audit_target_date: '' });
+  const [enabled, setEnabled] = useState([]);          // standards the org works to
+  const [active, setActive] = useState('');            // standard shown in clause views
+  const [targetDate, setTargetDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
-  const [clauseCount, setClauseCount] = useState(null);
-  const [loadingClauses, setLoadingClauses] = useState(false);
+  const [clauseCounts, setClauseCounts] = useState({}); // standard → count
+  const [loadingClauses, setLoadingClauses] = useState(null);
   const [clauseResult, setClauseResult] = useState(null);
 
-  // How many clauses exist for the selected standard — drives the
-  // "Load clause library" prompt below.
   useEffect(() => {
-    const std = form.brc_standard;
-    if (!std) { setClauseCount(null); return; }
-    base44.entities.BRCClause.filter({ standard: std }, 'display_order', 500)
-      .then(rows => setClauseCount(rows.length))
-      .catch(() => setClauseCount(null));
-  }, [form.brc_standard]);
+    if (!org) return;
+    const en = (Array.isArray(org.compliance_standards) && org.compliance_standards.length > 0)
+      ? org.compliance_standards
+      : (org.brc_standard ? [org.brc_standard] : []);
+    setEnabled(en);
+    setActive(org.brc_standard || en[0] || '');
+    setTargetDate(org.brc_audit_target_date || '');
+  }, [org?.id]);
 
-  const handleLoadClauses = async () => {
-    setLoadingClauses(true);
+  // Clause library status for every enabled standard
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const counts = {};
+      for (const std of enabled) {
+        try {
+          const rows = await base44.entities.BRCClause.filter({ standard: std }, 'display_order', 1000);
+          counts[std] = rows.length;
+        } catch { counts[std] = null; }
+      }
+      if (!cancelled) setClauseCounts(counts);
+    })();
+    return () => { cancelled = true; };
+  }, [enabled.join(',')]);
+
+  const toggleStandard = (key) => {
+    setEnabled(prev => {
+      const next = prev.includes(key) ? prev.filter(s => s !== key) : [...prev, key];
+      // Keep the active standard valid
+      if (!next.includes(active)) setActive(next[0] || '');
+      return next;
+    });
+  };
+
+  const handleLoadClauses = async (std) => {
+    setLoadingClauses(std);
     setClauseResult(null);
     try {
-      const res = await base44.functions.invoke('seedBrcClauses', { standard: form.brc_standard || 'brcgs_packaging' });
+      const res = await base44.functions.invoke('seedBrcClauses', { standard: std });
       setClauseResult(res.data);
-      const rows = await base44.entities.BRCClause.filter({ standard: form.brc_standard || 'brcgs_packaging' }, 'display_order', 500);
-      setClauseCount(rows.length);
+      const rows = await base44.entities.BRCClause.filter({ standard: std }, 'display_order', 1000);
+      setClauseCounts(c => ({ ...c, [std]: rows.length }));
     } catch {
       setClauseResult({ success: false, message: 'Failed to load the clause library — please try again.' });
     }
-    setLoadingClauses(false);
+    setLoadingClauses(null);
   };
-
-  useEffect(() => {
-    if (org) {
-      setForm({
-        brc_standard:          org.brc_standard          || '',
-        brc_audit_target_date: org.brc_audit_target_date || '',
-      });
-    }
-  }, [org?.id]);
 
   const handleSave = async () => {
     setSaving(true);
     await base44.entities.Organisation.update(org.id, {
-      brc_standard:          form.brc_standard          || null,
-      brc_audit_target_date: form.brc_audit_target_date || null,
+      compliance_standards:  enabled,
+      brc_standard:          active || null,
+      brc_audit_target_date: targetDate || null,
     });
     await base44.entities.AuditLogEntry.create({
       organisation_id: org.id,
@@ -70,75 +90,104 @@ function BrcSettingsContent() {
       target_type:     'organisation',
       target_id:       org.id,
       target_display:  org.name,
-      detail: JSON.stringify(form),
+      detail: JSON.stringify({ compliance_standards: enabled, active_standard: active, target_date: targetDate }),
     }).catch(() => {});
     await refreshOrg();
+    // Keep per-standard readiness scores in step with the new selection
+    base44.functions.invoke('recomputeReadinessScore', {}).catch(() => {});
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
 
+  const families = ['iso', 'brcgs'];
+
   return (
     <div className="space-y-6 max-w-lg">
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Settings className="w-6 h-6 text-primary" /> BRC Settings
+          <Settings className="w-6 h-6 text-primary" /> Compliance Settings
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Configure your BRC standard and target audit date.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Choose the standards your organisation is audited against — you can run several side by side.</p>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <div>
-          <Label>BRC Standard</Label>
-          <select
-            className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={form.brc_standard}
-            onChange={e => setForm(f => ({ ...f, brc_standard: e.target.value }))}
-          >
-            <option value="">— Select standard —</option>
-            {Object.entries(BRC_STANDARD_LABELS).map(([val, label]) => (
-              <option key={val} value={val} disabled={!AVAILABLE_STANDARDS.has(val)}>
-                {label}{AVAILABLE_STANDARDS.has(val) ? '' : ' (coming soon)'}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="bg-card border border-border rounded-xl p-5 space-y-5">
+        {/* Standard selection, grouped by family */}
+        {families.map(family => (
+          <div key={family}>
+            <Label>{FAMILY_LABELS[family]}</Label>
+            <div className="mt-2 space-y-1.5">
+              {Object.entries(STANDARDS).filter(([, s]) => s.family === family).map(([key, std]) => (
+                <label
+                  key={key}
+                  className={`flex items-center gap-3 py-1.5 ${std.available ? 'cursor-pointer group' : 'opacity-50 cursor-not-allowed'}`}
+                  onClick={() => std.available && toggleStandard(key)}
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${enabled.includes(key) ? 'bg-primary border-primary' : 'border-border group-hover:border-muted-foreground'}`}>
+                    {enabled.includes(key) && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span className="text-sm text-foreground">
+                    {std.label} <span className="text-xs text-muted-foreground">({std.edition}{std.available ? '' : ' — coming soon'})</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
 
-        {/* Clause library status for the selected standard */}
-        {form.brc_standard && clauseCount === 0 && (
-          <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-amber-50 border border-amber-200 text-amber-800">
+        {/* Active standard for clause views */}
+        {enabled.length > 1 && (
+          <div>
+            <Label>Standard shown in clause views</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-1">Clause mapping, the checklist and the readiness dashboard focus on one standard at a time — switchable from those pages too.</p>
+            <select
+              className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+              value={active}
+              onChange={e => setActive(e.target.value)}
+            >
+              {enabled.map(key => (
+                <option key={key} value={key}>{STANDARDS[key]?.label || key}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Clause library status per enabled standard */}
+        {enabled.filter(std => clauseCounts[std] === 0).map(std => (
+          <div key={std} className="flex items-start gap-2 p-3 rounded-lg text-sm bg-amber-50 border border-amber-200 text-amber-800">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
             <div className="flex-1">
-              <p className="font-medium">No clause library loaded for this standard</p>
+              <p className="font-medium">No clause library loaded for {STANDARDS[std]?.short || std}</p>
               <p className="text-xs mt-0.5">The clause mapping, checklist and readiness score need the standard's clauses. Load them once — this doesn't touch any of your own data.</p>
-              <Button size="sm" variant="outline" className="mt-2" onClick={handleLoadClauses} disabled={loadingClauses}>
-                {loadingClauses ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Loading…</> : 'Load clause library'}
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => handleLoadClauses(std)} disabled={!!loadingClauses}>
+                {loadingClauses === std ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Loading…</> : `Load ${STANDARDS[std]?.short || std} clauses`}
               </Button>
             </div>
           </div>
-        )}
+        ))}
         {clauseResult && (
           <p className={`text-xs ${clauseResult.success === false ? 'text-red-600' : 'text-green-700'}`}>
-            {clauseResult.message || (clauseResult.count ? `${clauseResult.count} clauses loaded.` : 'Clause library loaded.')}
+            {clauseResult.message || (clauseResult.seeded ? `${clauseResult.seeded} clauses loaded.` : 'Clause library loaded.')}
           </p>
         )}
 
         <div>
           <Label>Target Audit Date</Label>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-1">Your next external audit — drives the countdown and journey stages.</p>
           <Input
             type="date"
             className="mt-1"
-            value={form.brc_audit_target_date}
-            onChange={e => setForm(f => ({ ...f, brc_audit_target_date: e.target.value }))}
+            value={targetDate}
+            onChange={e => setTargetDate(e.target.value)}
           />
         </div>
 
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving || enabled.length === 0}>
           {saving
             ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</>
             : saved
               ? '✓ Saved'
-              : <><Save className="w-4 h-4 mr-1.5" /> Save BRC Settings</>
+              : <><Save className="w-4 h-4 mr-1.5" /> Save Compliance Settings</>
           }
         </Button>
       </div>

@@ -75,9 +75,9 @@ Deno.serve(async (req) => {
       exceeds: true,
       reason: 'module_not_entitled',
       upgrade_prompt: {
-        target: 'BRC Compliance Module',
-        message: `Your organisation does not have access to the ${module === 'brc_compliance' ? 'BRC Compliance' : module} module.`,
-        unlocks: ['BRC Compliance Readiness module'],
+        target: 'Compliance & Audit Readiness Module',
+        message: `Your organisation does not have access to the ${module === 'brc_compliance' ? 'Compliance & Audit Readiness' : module} module.`,
+        unlocks: ['Compliance & Audit Readiness module (BRCGS + ISO)'],
       },
     });
   }

@@ -16,20 +16,50 @@ const STATUS_RAG = {
   ready:            'green',
 };
 
+function scoreClauses(clauses, statusMap) {
+  let red = 0, amber = 0, green = 0;
+  const bySection = {};
+  for (const clause of clauses) {
+    const st = statusMap[clause.id];
+    const rag = st ? (STATUS_RAG[st.status] || 'red') : 'red';
+    if (rag === 'red')   red++;
+    if (rag === 'amber') amber++;
+    if (rag === 'green') green++;
+
+    // Group by the standard's section — the leading part of the clause number
+    // ("4.6" → section "4"). issue_number is the standard edition and is the
+    // same for every clause, so it must never be the grouping key.
+    const section = String(clause.clause_number || '').split('.')[0] || 'unknown';
+    if (!bySection[section]) bySection[section] = { red: 0, amber: 0, green: 0 };
+    bySection[section][rag]++;
+  }
+  const total = red + amber + green;
+  return {
+    overall_percent: total > 0 ? Math.round((green / total) * 100) : 0,
+    red_count:   red,
+    amber_count: amber,
+    green_count: green,
+    by_section:  bySection,
+  };
+}
+
 async function computeForOrg(base44, orgId) {
-  const [clauses, statuses] = await Promise.all([
+  const [statuses, allClauses] = await Promise.all([
     base44.asServiceRole.entities.BRCClauseStatus.filter({ organisation_id: orgId }),
-    base44.asServiceRole.entities.BRCClause.list('display_order', 500),
+    base44.asServiceRole.entities.BRCClause.list('display_order', 1000),
   ]);
 
-  // Find the org to get its standard
+  // Find the org to get its standards (multi-standard aware)
   const orgs = await base44.asServiceRole.entities.Organisation.filter({ id: orgId });
   if (!orgs.length) return null;
   const org = orgs[0];
-  if (!org.brc_standard) return null;
+  const enabled = (Array.isArray(org.compliance_standards) && org.compliance_standards.length > 0)
+    ? org.compliance_standards
+    : (org.brc_standard ? [org.brc_standard] : []);
+  if (enabled.length === 0) return null;
+  const active = enabled.includes(org.brc_standard) ? org.brc_standard : enabled[0];
 
-  const orgClauses = statuses; // already org-scoped
-  const statusMap = Object.fromEntries(orgClauses.map(s => [s.clause_id, s]));
+  const statusMap = Object.fromEntries(statuses.map(s => [s.clause_id, s]));
 
   // Reconcile evidence_count on every clause status from the actual links —
   // this is the authoritative recount behind the client-side sync helper.
@@ -38,40 +68,24 @@ async function computeForOrg(base44, orgId) {
   for (const link of links) {
     linkCounts[link.clause_id] = (linkCounts[link.clause_id] || 0) + 1;
   }
-  await Promise.all(orgClauses
+  await Promise.all(statuses
     .filter(s => (linkCounts[s.clause_id] || 0) !== (s.evidence_count || 0))
     .map(s => base44.asServiceRole.entities.BRCClauseStatus.update(s.id, {
       evidence_count: linkCounts[s.clause_id] || 0,
     }))
   );
 
-  let red = 0, amber = 0, green = 0;
-  const bySection = {};
-
-  for (const clause of clauses.filter(c => c.standard === org.brc_standard)) {
-    const st = statusMap[clause.id];
-    const rag = st ? (STATUS_RAG[st.status] || 'red') : 'red';
-    if (rag === 'red')   red++;
-    if (rag === 'amber') amber++;
-    if (rag === 'green') green++;
-
-    // Group by the standard's section — the leading part of the clause number
-    // ("4.6" → section "4"). issue_number is the standard issue (e.g. "7") and
-    // is the same for every clause, so it must never be the grouping key.
-    const section = String(clause.clause_number || '').split('.')[0] || 'unknown';
-    if (!bySection[section]) bySection[section] = { red: 0, amber: 0, green: 0 };
-    bySection[section][rag]++;
+  // Score each enabled standard; top-level fields mirror the active standard
+  // so existing consumers keep working, with per-standard detail alongside.
+  const byStandard = {};
+  for (const std of enabled) {
+    byStandard[std] = scoreClauses(allClauses.filter(c => c.standard === std), statusMap);
   }
 
-  const total = red + amber + green;
-  const overallPercent = total > 0 ? Math.round((green / total) * 100) : 0;
-
   const score = {
-    overall_percent: overallPercent,
-    red_count:   red,
-    amber_count: amber,
-    green_count: green,
-    by_section:  bySection,
+    ...(byStandard[active] || { overall_percent: 0, red_count: 0, amber_count: 0, green_count: 0, by_section: {} }),
+    active_standard: active,
+    by_standard: byStandard,
     computed_at: new Date().toISOString(),
   };
 

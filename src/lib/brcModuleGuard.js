@@ -1,8 +1,11 @@
 /**
- * Client-side BRC module guard.
- * NOTE: This is UX-only. Every BRC backend function enforces server-side.
- * Returns true if the organisation has the brc_compliance module enabled.
+ * Client-side Compliance module guard (module key remains 'brc_compliance'
+ * for data compatibility; the module now covers BRCGS and ISO standards).
+ * NOTE: This is UX-only — server-side enforcement lives in backend functions
+ * and entity rules.
  */
+import { STANDARDS } from '@/lib/standardsRegistry';
+
 export function hasBrcModule(org) {
   if (!org) return false;
   return Array.isArray(org.modules) && org.modules.includes('brc_compliance');
@@ -29,10 +32,9 @@ export function hasBrcEntitlement(org) {
 export const MODULE_SKILLS_MATRIX  = 'skills_matrix';
 export const MODULE_BRC_COMPLIANCE = 'brc_compliance';
 
-export const BRC_STANDARD_LABELS = {
-  brcgs_packaging:         'BRCGS Packaging',
-  brcgs_food:              'BRCGS Food Safety',
-  brcgs_storage:           'BRCGS Storage & Distribution',
-  brcgs_agents_brokers:    'BRCGS Agents & Brokers',
-  brcgs_consumer_products: 'BRCGS Consumer Products',
-};
+// Labels now come from the standards registry (which also carries ISO
+// standards, section names and per-standard behaviour). Kept as a re-export
+// so existing imports keep working.
+export const BRC_STANDARD_LABELS = Object.fromEntries(
+  Object.entries(STANDARDS).map(([key, std]) => [key, std.label])
+);
