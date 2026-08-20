@@ -35,6 +35,10 @@
     "read_at": {
       "type": "string",
       "title": "Read At"
+    },
+    "dedupe_key": {
+      "type": "string",
+      "title": "Dedupe Key (prevents duplicate reminders for the same event)"
     }
   },
   "required": [

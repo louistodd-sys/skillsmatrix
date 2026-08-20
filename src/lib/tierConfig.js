@@ -50,46 +50,34 @@ export const TIER_LIMITS = {
 
 // ── Feature gates ─────────────────────────────────────────────────────────────
 
+// Only features that actually exist in the product may appear here.
+// (employee_portal, pdf_reports, site_level_views and advanced_analytics were
+// removed — they were sold in copy but not built. Re-add each one WITH its
+// feature, never before.)
 export const TIER_FEATURES = {
   free: {
     core_matrix:              true,
     basic_gap_identification: true,
     gap_analysis_reports:     false,
     csv_export:               false,
-    employee_portal:          false,
-    pdf_reports:              false,
-    site_level_views:         false,
-    advanced_analytics:       false,
   },
   starter: {
     core_matrix:              true,
     basic_gap_identification: true,
     gap_analysis_reports:     true,
     csv_export:               true,
-    employee_portal:          false,
-    pdf_reports:              false,
-    site_level_views:         false,
-    advanced_analytics:       false,
   },
   growth: {
     core_matrix:              true,
     basic_gap_identification: true,
     gap_analysis_reports:     true,
     csv_export:               true,
-    employee_portal:          true,
-    pdf_reports:              true,
-    site_level_views:         false,
-    advanced_analytics:       false,
   },
   scale: {
     core_matrix:              true,
     basic_gap_identification: true,
     gap_analysis_reports:     true,
     csv_export:               true,
-    employee_portal:          true,
-    pdf_reports:              true,
-    site_level_views:         true,
-    advanced_analytics:       true,
   },
 };
 
@@ -115,12 +103,12 @@ export function getUpgradePrompt(scenario, currentTier) {
       starter: {
         target: 'Growth',
         message: "You've reached the 30-employee limit. Upgrade to Growth to track up to 100 employees.",
-        unlocks: ['Up to 100 employees', 'Unlimited skills & categories', 'Employee self-assessment portal', 'Audit-ready PDF reports', 'Unlimited managers'],
+        unlocks: ['Up to 100 employees', 'Unlimited skills & categories', 'Unlimited managers', '3 admin seats'],
       },
       growth: {
         target: 'Scale',
         message: "You've reached the 100-employee limit. Upgrade to Scale to track up to 250 employees.",
-        unlocks: ['Up to 250 employees', 'Department & site level views', 'Advanced analytics dashboard', 'Unlimited admin seats'],
+        unlocks: ['Up to 250 employees', 'Unlimited admin seats', 'Unlimited managers'],
       },
     },
     category_limit: {
@@ -132,7 +120,7 @@ export function getUpgradePrompt(scenario, currentTier) {
       starter: {
         target: 'Growth',
         message: "You've used all 5 categories. Upgrade to Growth for unlimited categories.",
-        unlocks: ['Unlimited categories', 'Unlimited skills', 'Employee portal', 'PDF reports'],
+        unlocks: ['Unlimited categories', 'Unlimited skills', 'Up to 100 employees', 'Unlimited managers'],
       },
     },
     manager_seat_limit: {
@@ -144,36 +132,7 @@ export function getUpgradePrompt(scenario, currentTier) {
       starter: {
         target: 'Growth',
         message: "Starter includes 3 manager seats. Upgrade to Growth for unlimited managers.",
-        unlocks: ['Unlimited manager seats', 'Employee self-assessment portal', 'Audit-ready PDF reports', 'Unlimited skills & categories'],
-      },
-    },
-    pdf_export: {
-      free: {
-        target: 'Growth',
-        message: "Audit-ready PDF reports are available on Growth and above.",
-        unlocks: ['Audit-ready PDF reports', 'Employee self-assessment portal', 'Unlimited skills & categories', 'Unlimited managers'],
-      },
-      starter: {
-        target: 'Growth',
-        message: "Audit-ready PDF reports are available on Growth and above.",
-        unlocks: ['Audit-ready PDF reports', 'Employee self-assessment portal', 'Unlimited skills & categories', 'Unlimited managers'],
-      },
-    },
-    site_level_views: {
-      free: {
-        target: 'Scale',
-        message: "Department and site views are available on Scale.",
-        unlocks: ['Department & site level views', 'Advanced analytics dashboard', 'Unlimited admin seats', 'Up to 250 employees'],
-      },
-      starter: {
-        target: 'Scale',
-        message: "Department and site views are available on Scale.",
-        unlocks: ['Department & site level views', 'Advanced analytics dashboard', 'Unlimited admin seats'],
-      },
-      growth: {
-        target: 'Scale',
-        message: "Department and site views are available on Scale.",
-        unlocks: ['Department & site level views', 'Advanced analytics dashboard', 'Unlimited admin seats', 'Up to 250 employees'],
+        unlocks: ['Unlimited manager seats', 'Unlimited skills & categories', 'Up to 100 employees'],
       },
     },
     csv_export: {
@@ -192,7 +151,7 @@ export function getUpgradePrompt(scenario, currentTier) {
       starter: {
         target: 'Growth',
         message: "You've reached the 50-skill limit. Upgrade to Growth for unlimited skills.",
-        unlocks: ['Unlimited skills', 'Unlimited categories', 'Employee portal', 'PDF reports'],
+        unlocks: ['Unlimited skills', 'Unlimited categories', 'Up to 100 employees', 'Unlimited managers'],
       },
     },
     admin_seat_limit: {
@@ -204,12 +163,12 @@ export function getUpgradePrompt(scenario, currentTier) {
       starter: {
         target: 'Growth',
         message: "Starter includes 2 admin seats. Upgrade to Growth for 3 admin seats.",
-        unlocks: ['3 admin seats', 'Unlimited managers', 'Employee portal', 'PDF reports'],
+        unlocks: ['3 admin seats', 'Unlimited managers', 'Unlimited skills & categories'],
       },
       growth: {
         target: 'Scale',
         message: "Growth includes 3 admin seats. Upgrade to Scale for unlimited admin seats.",
-        unlocks: ['Unlimited admin seats', 'Department & site views', 'Advanced analytics', 'Up to 250 employees'],
+        unlocks: ['Unlimited admin seats', 'Up to 250 employees', 'Unlimited managers'],
       },
     },
   };

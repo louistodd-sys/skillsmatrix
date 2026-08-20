@@ -3,9 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
-  // This is a scheduled function — use service role
+  // Scheduled function. Callable only by an authenticated admin, or by the
+  // scheduler presenting the CRON_SECRET header. Unauthenticated calls without
+  // the secret are rejected — this function reads every organisation via the
+  // service role, so it must fail closed.
   const user = await base44.auth.me().catch(() => null);
-  if (user && user.role !== 'admin') {
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const isScheduler = !!cronSecret && req.headers.get('x-cron-secret') === cronSecret;
+  const isAdmin = !!user && user.role === 'admin';
+  if (!isAdmin && !isScheduler) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -44,8 +50,8 @@ To keep access to all your data and continue using Skills Matrix App without int
 
 Choose a plan:
 • Starter — £39/month (or £390/year) — Up to 30 employees, gap analysis, CSV export
-• Growth — £79/month (or £790/year) — Up to 100 employees, employee portal, PDF reports
-• Scale — £149/month (or £1,490/year) — Up to 250 employees, site views, advanced analytics
+• Growth — £79/month (or £790/year) — Up to 100 employees, unlimited skills, unlimited managers
+• Scale — £149/month (or £1,490/year) — Up to 250 employees, unlimited admin seats
 
 Upgrade now: https://skillsmatrixapp.com/settings
 

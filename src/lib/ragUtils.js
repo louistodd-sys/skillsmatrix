@@ -63,6 +63,23 @@ export function getRAGLabel(status, assessment, skill, teamRequirement) {
   }
 }
 
+// Behaviourally-anchored descriptors shown at the point of assessment so every
+// assessor applies the same meaning to a level — the single biggest cause of
+// unreliable matrices is each supervisor inventing their own scale.
+export const PROFICIENCY_DESCRIPTORS = {
+  binary: {
+    0: 'Cannot yet perform this task to the required standard, or not observed doing it.',
+    1: 'Observed performing this task correctly and safely without supervision.',
+  },
+  levelled: {
+    0: 'No training received; must not perform this task.',
+    1: 'Has been trained and understands the task; works only under direct supervision.',
+    2: 'Performs the routine task correctly with occasional guidance on exceptions.',
+    3: 'Performs the full task independently, including exceptions, to the required standard.',
+    4: 'Independent, handles the unexpected, and can train and assess others.',
+  },
+};
+
 export function getProficiencyLabel(level, scaleType) {
   if (level === null || level === undefined) return 'Not Assessed';
   const n = Number(level);

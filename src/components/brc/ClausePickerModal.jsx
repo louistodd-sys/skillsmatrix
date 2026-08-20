@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import useOrganisation from '@/lib/useOrganisation';
+import { createEvidenceLink } from '@/lib/brcEvidence';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Loader2, Search, Link2 } from 'lucide-react';
@@ -18,6 +20,7 @@ const ENTITY_TYPE_MAP = {
 };
 
 export default function ClausePickerModal({ org, entityType, recordId, recordLabel, onClose }) {
+  const { user } = useOrganisation();
   const [clauses, setClauses] = useState([]);
   const [existingLinks, setExistingLinks] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -61,11 +64,12 @@ export default function ClausePickerModal({ org, entityType, recordId, recordLab
     if (alreadyLinkedClauseIds.has(clause.id)) return;
     setSaving(clause.id);
     try {
-      await base44.entities.BRCClauseEvidenceLink.create({
-        organisation_id:    org.id,
-        clause_id:          clause.id,
-        linked_entity_type: linkedEntityType,
-        linked_entity_id:   recordId,
+      await createEvidenceLink({
+        orgId:            org.id,
+        userId:           user?.id,
+        clauseId:         clause.id,
+        linkedEntityType: linkedEntityType,
+        linkedEntityId:   recordId,
       });
       setExistingLinks(prev => [...prev, { clause_id: clause.id, linked_entity_type: linkedEntityType }]);
       toast.success(`Linked to clause ${clause.clause_number}`);

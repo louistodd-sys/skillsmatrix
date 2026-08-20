@@ -75,7 +75,11 @@ export default function BillingSection({ org }) {
   const [brcCheckoutLoading, setBrcCheckoutLoading] = useState(false);
   const handleBrcSubscribe = async () => {
     setBrcCheckoutLoading(true);
-    const res = await base44.functions.invoke('stripeBrcCheckout', { billing_interval: 'monthly' });
+    // Honour the same monthly/annual toggle as the plan cards — previously this
+    // was hard-coded to monthly, making the annual BRC price unreachable here.
+    const res = await base44.functions.invoke('stripeBrcCheckout', {
+      billing_interval: billingInterval === 'annual' ? 'annual' : 'monthly',
+    });
     if (res.data?.url) window.location.href = res.data.url;
     setBrcCheckoutLoading(false);
   };
@@ -169,9 +173,8 @@ export default function BillingSection({ org }) {
                 <li>• Up to {TIER_LIMITS[tier].employees} employees</li>
                 <li>• {TIER_LIMITS[tier].skills === null ? 'Unlimited' : TIER_LIMITS[tier].skills} skills</li>
                 <li>• {TIER_LIMITS[tier].manager_seats === null ? 'Unlimited' : TIER_LIMITS[tier].manager_seats} manager seats</li>
-                {features.pdf_reports && <li className="text-green-700">• PDF reports</li>}
-                {features.employee_portal && <li className="text-green-700">• Employee portal</li>}
-                {features.advanced_analytics && <li className="text-green-700">• Advanced analytics</li>}
+                {features.gap_analysis_reports && <li className="text-green-700">• Gap analysis reports</li>}
+                {features.csv_export && <li className="text-green-700">• CSV export</li>}
               </ul>
               <Button
                 size="sm"

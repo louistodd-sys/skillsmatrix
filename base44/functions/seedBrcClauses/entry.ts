@@ -77,6 +77,15 @@ Deno.serve(async (req) => {
   const standard = body.standard || 'brcgs_packaging';
   const issue_number = body.issue_number || '7';
 
+  // Only the packaging standard has clause data. Seeding another standard
+  // would file packaging clauses under its name — refuse instead.
+  if (standard !== 'brcgs_packaging') {
+    return Response.json({
+      success: false,
+      message: `No clause library exists for ${standard} yet — only brcgs_packaging is available.`,
+    }, { status: 422 });
+  }
+
   // Idempotency check — don't seed if clauses already exist for this standard
   const existing = await base44.asServiceRole.entities.BRCClause.filter({ standard }, '-created_date', 1);
   if (existing.length > 0) {

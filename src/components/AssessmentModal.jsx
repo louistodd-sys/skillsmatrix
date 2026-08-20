@@ -5,7 +5,8 @@ import useOrganisation from '@/lib/useOrganisation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getProficiencyLabel } from '@/lib/ragUtils';
+import { getProficiencyLabel, PROFICIENCY_DESCRIPTORS } from '@/lib/ragUtils';
+import EvidenceSection from '@/components/EvidenceSection';
 import { formatDate } from '@/lib/format';
 import useModal from '@/hooks/useModal';
 
@@ -140,11 +141,16 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
             <Label>Proficiency Level <span className="text-destructive">*</span></Label>
             <div className="space-y-1.5 mt-2">
               {levelOptions.map(opt => (
-                <label key={opt.value} className="flex items-center gap-3 cursor-pointer group" onClick={() => setForm(f => ({ ...f, proficiency_level: opt.value }))}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${form.proficiency_level === opt.value ? 'border-primary bg-primary' : 'border-border group-hover:border-muted-foreground'}`}>
+                <label key={opt.value} className="flex items-start gap-3 cursor-pointer group" onClick={() => setForm(f => ({ ...f, proficiency_level: opt.value }))}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 mt-0.5 ${form.proficiency_level === opt.value ? 'border-primary bg-primary' : 'border-border group-hover:border-muted-foreground'}`}>
                     {form.proficiency_level === opt.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
                   </div>
-                  <span className="text-sm">{opt.label}</span>
+                  <span className="text-sm">
+                    {opt.label}
+                    <span className="block text-xs text-muted-foreground">
+                      {PROFICIENCY_DESCRIPTORS[isBinary ? 'binary' : 'levelled'][opt.value]}
+                    </span>
+                  </span>
                 </label>
               ))}
             </div>
@@ -206,6 +212,16 @@ export default function AssessmentModal({ userId, userName, skill, existingAsses
               <p className="text-xs text-muted-foreground text-right">{300 - form.notes.length} remaining</p>
             )}
           </div>
+
+          {/* Certificates / evidence — attachable once the assessment exists */}
+          {existingAssessment && (
+            <EvidenceSection linkedEntityType="skill_assessment" linkedEntityId={existingAssessment.id} />
+          )}
+          {!existingAssessment && (
+            <p className="text-xs text-muted-foreground">
+              You can attach a certificate or other evidence after saving, by reopening this assessment.
+            </p>
+          )}
 
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

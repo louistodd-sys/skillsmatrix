@@ -6,6 +6,8 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import InvitationGate from './components/InvitationGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import Dashboard from './pages/Dashboard';
 import SkillsMatrix from './pages/SkillsMatrix';
@@ -74,6 +76,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <>
+      <InvitationGate />
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
         {/* Legal pages — accessible without sidebar layout */}
@@ -83,23 +86,30 @@ const AuthenticatedApp = () => {
         <Route path="/dpa" element={<DataProcessingAgreement />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/matrix" element={<SkillsMatrix />} />
-          <Route path="/gap-analysis" element={<GapAnalysis />} />
-          <Route path="/teams" element={<Teams />} />
-          <Route path="/teams/:teamId" element={<TeamDetail />} />
-          <Route path="/people" element={<People />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/:userId" element={<UserProfile />} />
-          <Route path="/skills-library" element={<SkillsLibrary />} />
-          <Route path="/audit-log" element={<AuditLog />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="/my-profile" element={<MyProfile />} />
+          {/* Manager and admin areas */}
+          <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
+            <Route path="/matrix" element={<SkillsMatrix />} />
+            <Route path="/gap-analysis" element={<GapAnalysis />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/teams/:teamId" element={<TeamDetail />} />
+            <Route path="/people" element={<People />} />
+            <Route path="/users/:userId" element={<UserProfile />} />
+            <Route path="/skills-library" element={<SkillsLibrary />} />
+          </Route>
+          {/* Admin-only areas */}
+          <Route element={<ProtectedRoute roles={['admin']} />}>
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/audit-log" element={<AuditLog />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
         </Route>
         {/* BRC upgrade page — visible to Skills-Matrix-only orgs */}
         <Route path="/upgrade-brc" element={<UpgradeBrc />} />
 
         {/* BRC Compliance Readiness routes */}
         <Route element={<Layout />}>
+        <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
           <Route path="/brc"                                  element={<BrcDashboard />} />
           <Route path="/brc/clauses"                          element={<BrcClauses />} />
           <Route path="/brc/clauses/:clauseId"                element={<BrcClauseDetail />} />
@@ -126,6 +136,7 @@ const AuthenticatedApp = () => {
           <Route path="/brc/audit-checklist"                  element={<BrcAuditChecklist />} />
           <Route path="/brc/guide"                            element={<BrcGuide />} />
           <Route path="/brc/settings"                         element={<BrcSettings />} />
+        </Route>
         </Route>
 
         <Route path="*" element={<PageNotFound />} />

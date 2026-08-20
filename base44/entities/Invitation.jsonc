@@ -44,6 +44,14 @@
       ],
       "title": "Status",
       "default": "pending"
+    },
+    "expires_at": {
+      "type": "string",
+      "title": "Expires At (ISO datetime)"
+    },
+    "accepted_at": {
+      "type": "string",
+      "title": "Accepted At (ISO datetime)"
     }
   },
   "required": [

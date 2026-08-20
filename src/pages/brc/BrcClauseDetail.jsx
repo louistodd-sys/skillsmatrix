@@ -7,6 +7,7 @@ import { FileText, ExternalLink, CheckCircle2, Plus, Trash2, ScrollText, Clipboa
 import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import EvidenceLinkModal from '@/components/brc/EvidenceLinkModal';
+import { deleteEvidenceLink } from '@/lib/brcEvidence';
 import { toast } from 'sonner';
 
 const STATUS_OPTIONS = ['not_started','in_progress','evidence_attached','ready','needs_review'];
@@ -118,7 +119,7 @@ function BrcClauseDetailContent() {
 
   const handleRemoveEvidence = async (linkId) => {
     try {
-      await base44.entities.BRCClauseEvidenceLink.delete(linkId);
+      await deleteEvidenceLink({ orgId: org.id, linkId, clauseId });
       await loadEvidence();
       toast.success('Evidence removed');
     } catch {

@@ -8,8 +8,8 @@ import {
   ScrollText, ClipboardList, FileText, GraduationCap, ChevronRight
 } from 'lucide-react';
 
-const today = new Date();
-const daysFrom = (dateStr) => dateStr ? Math.ceil((new Date(dateStr) - today) / 86400000) : null;
+// Computed per call — a module-level Date goes stale in a long-lived tab.
+const daysFrom = (dateStr) => dateStr ? Math.ceil((new Date(dateStr) - new Date()) / 86400000) : null;
 
 function ActionItem({ icon: Icon, iconBg, iconColor, title, subtitle, linkTo, urgency }) {
   const urgencyBorder = urgency === 'critical' ? 'border-l-red-500' : urgency === 'warning' ? 'border-l-amber-400' : 'border-l-blue-400';
@@ -168,9 +168,11 @@ function BrcActionCentreContent() {
       });
     }
 
+    // Sort by urgency BEFORE capping the list — slicing first silently dropped
+    // arbitrary (possibly critical) alerts once there were more than 50.
     return items
-      .slice(0, 50)
-      .sort((a, b) => a.sort - b.sort);
+      .sort((a, b) => a.sort - b.sort)
+      .slice(0, 50);
   }, [ncs, capas, calibration, suppliers, documents, assessments, complaints, statuses]);
 
   const critical = actions.filter(a => a.urgency === 'critical');

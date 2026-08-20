@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { industryTemplates } from '@/lib/industryTemplates';
-import { TIER_PRICING, TIER_LIMITS } from '@/lib/tierConfig';
+import { TIER_PRICING } from '@/lib/tierConfig';
 import { toast } from 'sonner';
 
 const steps = [
@@ -18,46 +18,34 @@ const steps = [
   { icon: Send,      label: 'Invite'       },
 ];
 
+// Displayed prices come from TIER_PRICING (src/lib/tierConfig.js) — the single
+// source of truth shared with Stripe env price IDs. Features listed here must
+// exist in the product.
 const PLAN_OPTIONS = [
   {
     tier: 'free',
     label: 'Free',
-    price: '£0',
-    subtitle: 'Forever free',
     features: ['5 employees', '15 skills', '3 categories', '1 admin seat'],
-    cta: 'Start for free',
     highlight: false,
   },
   {
     tier: 'starter',
     label: 'Starter',
-    price: '£29',
-    annualPrice: '£288',
-    subtitle: '/month',
     features: ['30 employees', '50 skills', '5 categories', '2 admins + 3 managers', 'Gap analysis & CSV export'],
-    cta: 'Start 14-day free trial',
     highlight: false,
     trial: true,
   },
   {
     tier: 'growth',
     label: 'Growth',
-    price: '£59',
-    annualPrice: '£588',
-    subtitle: '/month',
-    features: ['100 employees', 'Unlimited skills', '3 admins + unlimited managers', 'Employee portal', 'PDF reports'],
-    cta: 'Start 14-day free trial',
+    features: ['100 employees', 'Unlimited skills & categories', '3 admins + unlimited managers'],
     highlight: true,
     trial: true,
   },
   {
     tier: 'scale',
     label: 'Scale',
-    price: '£119',
-    annualPrice: '£1,188',
-    subtitle: '/month',
-    features: ['250 employees', 'Unlimited everything', 'Advanced analytics', 'Site-level views'],
-    cta: 'Start 14-day free trial',
+    features: ['250 employees', 'Unlimited skills & categories', 'Unlimited admins & managers'],
     highlight: false,
     trial: true,
   },
@@ -93,18 +81,22 @@ export default function Onboarding() {
   const handleStep1 = async () => {
     if (!orgName.trim()) return;
     setLoading(true);
-    const newOrg = await base44.entities.Organisation.create({
-      name: orgName.trim(),
-      slug: orgName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      timezone,
-      subscription_tier: 'free',
-      onboarding_step: 2,
-    });
-    setOrgId(newOrg.id);
-    await base44.auth.updateMe({ organisation_id: newOrg.id, role: 'admin', status: 'active' });
-    await refreshUser();
+    try {
+      // Org creation + admin assignment happen server-side — the client never
+      // writes its own role.
+      const res = await base44.functions.invoke('createOrganisation', {
+        name: orgName.trim(),
+        timezone,
+      });
+      const newOrg = res.data?.organisation;
+      if (!newOrg?.id) throw new Error(res.data?.error || 'Could not create organisation');
+      setOrgId(newOrg.id);
+      await refreshUser();
+      setStep(2);
+    } catch (err) {
+      toast.error(err?.message || 'Could not create organisation — please try again.');
+    }
     setLoading(false);
-    setStep(2);
   };
 
   const handleStep2 = async () => {
@@ -112,7 +104,10 @@ export default function Onboarding() {
     if (selectedTier !== 'free') {
       setLoading(true);
       try {
-        await base44.entities.Organisation.update(orgId, { subscription_tier: selectedTier, onboarding_step: 3 });
+        // Don't set the paid tier optimistically — the Stripe webhook applies it
+        // on checkout.session.completed, so an abandoned checkout leaves the org
+        // correctly on the free tier.
+        await base44.entities.Organisation.update(orgId, { onboarding_step: 3 });
         const res = await base44.functions.invoke('stripeCheckout', {
           tier: selectedTier,
           billing_interval: billingInterval,
@@ -136,6 +131,24 @@ export default function Onboarding() {
     setLoading(true);
     if (selectedTemplate) {
       const template = industryTemplates.find(t => t.id === selectedTemplate);
+      // Templates go through the same tier limits as manual creation.
+      const catCount = template?.categories?.length ?? 0;
+      const skillCount = (template?.categories ?? []).reduce((sum, c) => sum + c.skills.length, 0);
+      try {
+        const [catCheck, skillCheck] = await Promise.all([
+          base44.functions.invoke('checkTierLimit', { resource: 'category', add: catCount }),
+          base44.functions.invoke('checkTierLimit', { resource: 'skill', add: skillCount }),
+        ]);
+        if (!catCheck.data.allowed || !skillCheck.data.allowed) {
+          toast.error('This template exceeds your plan limits. Pick a higher plan in the previous step, or skip and add skills manually.');
+          setLoading(false);
+          return;
+        }
+      } catch {
+        toast.error("Couldn't verify your plan limits — please try again.");
+        setLoading(false);
+        return;
+      }
       for (const cat of (template?.categories ?? [])) {
         const newCat = await base44.entities.SkillCategory.create({
           organisation_id: orgId, name: cat.name, colour: cat.colour,

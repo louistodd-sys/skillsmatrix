@@ -5,11 +5,13 @@
  * the BRC checkout flow rather than toggling freely.
  */
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Grid3X3, ShieldCheck, Loader2, CheckCircle2, Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { hasBrcEntitlement } from '@/lib/brcModuleGuard';
 import { BRC_PRICING } from '@/lib/tierConfig';
 
@@ -23,25 +25,23 @@ const MODULE_INFO = {
   brc_compliance: {
     icon: ShieldCheck,
     label: 'BRC Compliance Readiness',
-    description: 'BRCGS clause mapping, document control, audit scheduling, NC/CAPA workflows, and supplier registers.',
+    description: 'BRCGS clause mapping, document register, audit scheduling, NC/CAPA workflows, and supplier registers.',
     alwaysOn: false,
   },
 };
 
 export default function ModuleToggleSection({ org, onModulesChanged }) {
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(null);
-  const [brcCheckoutLoading, setBrcCheckoutLoading] = useState(false);
+  const [brcCheckoutLoading] = useState(false);
   const currentModules = Array.isArray(org?.modules) ? org.modules : ['skills_matrix'];
   const brcEntitled = hasBrcEntitlement(org);
 
   const isEnabled = (mod) => currentModules.includes(mod);
 
-  const handleBrcSubscribe = async () => {
-    setBrcCheckoutLoading(true);
-    const res = await base44.functions.invoke('stripeBrcCheckout', { billing_interval: 'monthly' });
-    if (res.data?.url) window.location.href = res.data.url;
-    setBrcCheckoutLoading(false);
-  };
+  // Send subscribers to the BRC upgrade page, which offers the monthly/annual
+  // choice — previously this kicked off a checkout hard-coded to monthly.
+  const handleBrcSubscribe = () => navigate('/upgrade-brc');
 
   const handleToggle = async (mod, enable) => {
     if (MODULE_INFO[mod]?.alwaysOn) return;
@@ -52,19 +52,14 @@ export default function ModuleToggleSection({ org, onModulesChanged }) {
     }
     setSaving(mod);
 
-    const updated = enable
-      ? [...new Set([...currentModules, mod])]
-      : currentModules.filter(m => m !== mod);
-
-    await base44.entities.Organisation.update(org.id, { modules: updated });
-    await base44.entities.AuditLogEntry.create({
-      organisation_id: org.id,
-      action: enable ? 'module.enabled' : 'module.disabled',
-      target_type: 'organisation',
-      target_id: org.id,
-      target_display: org.name,
-      detail: JSON.stringify({ module: mod, modules_after: updated }),
-    }).catch(() => {});
+    try {
+      // Server-side toggle — verifies admin role and BRC entitlement so the
+      // paywall is never a client-side decision.
+      const res = await base44.functions.invoke('setModuleEnabled', { module: mod, enabled: enable });
+      if (res.data?.error) throw new Error(res.data.error);
+    } catch (err) {
+      toast.error(err?.message || 'Could not update module — please try again.');
+    }
 
     setSaving(null);
     onModulesChanged?.();

@@ -32,7 +32,7 @@ export default function InviteUserModal({ orgId, teams, onClose, onSaved }) {
 
     setSending(true);
 
-    // Create invitation record
+    // Create invitation record (valid for 14 days — acceptInvitation checks this)
     await base44.entities.Invitation.create({
       organisation_id: orgId,
       email: email.trim(),
@@ -41,6 +41,7 @@ export default function InviteUserModal({ orgId, teams, onClose, onSaved }) {
       invited_by_name: user?.full_name,
       team_ids: selectedTeams,
       status: 'pending',
+      expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
     // Actually invite the user via base44

@@ -4,16 +4,27 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { industryTemplates } from '@/lib/industryTemplates';
 import useModal from '@/hooks/useModal';
+import useTierCheck from '@/hooks/useTierCheck';
+import UpgradePromptModal from '@/components/UpgradePromptModal';
 
 export default function TemplatePickerModal({ orgId, existingCategories, onClose, onImported }) {
   const dialogRef = useModal(onClose);
+  const { checkLimit, upgradePrompt, clearPrompt } = useTierCheck();
   const [selected, setSelected] = useState(null);
   const [importing, setImporting] = useState(false);
 
   const handleImport = async () => {
     if (!selected) return;
-    setImporting(true);
     const template = industryTemplates.find(t => t.id === selected);
+
+    // Tier check with the template's actual batch sizes — importing a template
+    // must respect the same limits as adding skills/categories one at a time.
+    const newCategories = template.categories.filter(cat => !existingCategories.find(c => c.name === cat.name)).length;
+    const newSkills = template.categories.reduce((sum, c) => sum + c.skills.length, 0);
+    if (newCategories > 0 && !(await checkLimit('category', newCategories))) return;
+    if (newSkills > 0 && !(await checkLimit('skill', newSkills))) return;
+
+    setImporting(true);
 
     for (const cat of template.categories) {
       let existing = existingCategories.find(c => c.name === cat.name);
@@ -45,6 +56,8 @@ export default function TemplatePickerModal({ orgId, existingCategories, onClose
   };
 
   return (
+    <>
+    {upgradePrompt && <UpgradePromptModal prompt={upgradePrompt} onClose={clearPrompt} />}
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div
         ref={dialogRef}
@@ -91,5 +104,6 @@ export default function TemplatePickerModal({ orgId, existingCategories, onClose
         </div>
       </div>
     </div>
+    </>
   );
 }

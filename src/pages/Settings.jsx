@@ -90,7 +90,7 @@ const TIMEZONES = [
 ];
 
 export default function Settings() {
-  const { org, refreshOrg } = useOrganisation();
+  const { org, user, refreshOrg } = useOrganisation();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') === 'billing' ? 'billing' : 'general';
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -108,6 +108,7 @@ export default function Settings() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
   const [usage, setUsage]             = useState({ users: 0, employees: 0, teams: 0, skills: 0 });
   const [usageLoaded, setUsageLoaded] = useState(false);
 
@@ -268,6 +269,19 @@ export default function Settings() {
 
   if (!org) return null;
 
+  // Defence in depth alongside the admin route guard: organisation settings,
+  // exports, imports and deletion are admin-only.
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="max-w-md bg-card border border-border rounded-xl p-8 text-center space-y-2">
+        <h1 className="text-lg font-semibold text-foreground">Admin access required</h1>
+        <p className="text-sm text-muted-foreground">
+          Organisation settings can only be managed by an admin.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Tab nav */}
@@ -370,14 +384,22 @@ export default function Settings() {
         </Button>
       </section>
 
-      {/* Notifications */}
+      {/* Notifications — backed by the sendExpiryReminders engine (daily +
+          Monday digest). The scheduled automation must be configured in the
+          Base44 dashboard for these to fire automatically; "Send reminders
+          now" runs the same engine on demand. */}
       <section className="bg-card border border-border rounded-xl p-5 space-y-4">
         <h2 className="text-base font-semibold">Notifications</h2>
+        <p className="text-xs text-muted-foreground">
+          The daily reminder job alerts managers and admins as skills approach each warning
+          threshold, and emails admins when something expires. Reminders appear in the bell
+          menu and by email.
+        </p>
         <div className="flex items-center justify-between gap-4">
           <div>
             <Label>Notify Users on Skill Expiry</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Send expiry warnings directly to the employee (in addition to managers and admins)
+              Also send expiry warnings directly to the employee (in addition to managers and admins)
             </p>
           </div>
           <Switch
@@ -397,9 +419,28 @@ export default function Settings() {
             onCheckedChange={v => setForm({ ...form, weekly_digest_enabled: v })}
           />
         </div>
-        <Button onClick={handleSave} disabled={saving} variant="outline" size="sm">
-          {saving ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</> : 'Save Notification Settings'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleSave} disabled={saving} variant="outline" size="sm">
+            {saving ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</> : 'Save Notification Settings'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={sendingReminders}
+            onClick={async () => {
+              setSendingReminders(true);
+              try {
+                const res = await base44.functions.invoke('sendExpiryReminders', { mode: 'daily' });
+                toast.success(`Reminder run complete — ${res.data?.notifications ?? 0} notifications, ${res.data?.emails ?? 0} emails.`);
+              } catch {
+                toast.error('Reminder run failed — please try again.');
+              }
+              setSendingReminders(false);
+            }}
+          >
+            {sendingReminders ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Running…</> : 'Send reminders now'}
+          </Button>
+        </div>
       </section>
 
       {/* Modules */}
@@ -447,7 +488,7 @@ export default function Settings() {
         <BulkImportModal
           orgId={org.id}
           onClose={() => setShowBulkImport(false)}
-          onImported={() => setShowBulkImport(false)}
+          onImported={() => { /* keep the modal open so the result summary and error report stay visible */ }}
         />
       )}
 

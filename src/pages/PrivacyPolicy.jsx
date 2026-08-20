@@ -59,7 +59,7 @@ export default function PrivacyPolicy() {
         <p className="text-sm text-muted-foreground leading-relaxed">
           We retain your data for as long as your subscription is active. Upon cancellation, data is retained for 30 days
           before deletion, unless you request earlier erasure. Audit log entries are anonymised rather than deleted
-          to preserve tamper-evident records.
+          to preserve a record of system activity.
         </p>
       </section>
 
