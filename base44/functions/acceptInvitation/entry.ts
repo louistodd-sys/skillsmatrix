@@ -34,9 +34,19 @@ Deno.serve(async (req) => {
   }
 
   const now = new Date();
-  const all = await base44.asServiceRole.entities.Invitation.filter({ status: 'pending' });
-  const mine = all
-    .filter(inv => (inv.email || '').trim().toLowerCase() === user.email.trim().toLowerCase())
+  // Query by email rather than scanning every organisation's pending
+  // invitations. Invitations are stored as typed, so try both the exact
+  // address and its lowercased form; matching stays case-insensitive.
+  const email = user.email.trim();
+  const queries = [email];
+  if (email.toLowerCase() !== email) queries.push(email.toLowerCase());
+  const batches = await Promise.all(
+    queries.map(q => base44.asServiceRole.entities.Invitation.filter({ status: 'pending', email: q }))
+  );
+  const byId = new Map();
+  for (const batch of batches) for (const inv of batch) byId.set(inv.id, inv);
+  const mine = [...byId.values()]
+    .filter(inv => (inv.email || '').trim().toLowerCase() === email.toLowerCase())
     .sort((a, b) => (b.created_date || '').localeCompare(a.created_date || ''));
 
   const valid = mine.find(inv => !inv.expires_at || new Date(inv.expires_at) > now);

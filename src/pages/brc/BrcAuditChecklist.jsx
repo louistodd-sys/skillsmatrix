@@ -2,10 +2,12 @@ import BrcModuleGuard from '@/components/BrcModuleGuard';
 import { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import useOrganisation from '@/lib/useOrganisation';
-import { CheckSquare, Download, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp, ExternalLink, Plus } from 'lucide-react';
+import { CheckSquare, Download, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BRC_STANDARD_LABELS } from '@/lib/brcModuleGuard';
+import { sectionName, standardLabel, standardHasFundamentals } from '@/lib/standardsRegistry';
+import { downloadCSV, exportFilename } from '@/lib/exportUtils';
+import StandardSwitcher from '@/components/brc/StandardSwitcher';
 import NCFormModal from '@/components/brc/NCFormModal';
 
 const STATUS_CFG = {
@@ -16,17 +18,7 @@ const STATUS_CFG = {
   needs_review:     { label: 'Needs Review',       dot: 'bg-red-500',   text: 'text-red-700',   bg: 'bg-red-50'    },
 };
 
-const SECTION_NAMES = {
-  '1': 'Senior Management Commitment',
-  '2': 'Hazard & Risk Management',
-  '3': 'Food Safety & Quality Management',
-  '4': 'Site Standards',
-  '5': 'Product & Process Control',
-  '6': 'Process Control',
-  '7': 'Personnel',
-};
-
-function ReadinessGate({ clauses, statusMap, capasOverdue, ncsOverdue }) {
+function ReadinessGate({ clauses, statusMap, capasOverdue, ncsOverdue, hasFundamentals }) {
   const fundamentals = clauses.filter(c => c.is_fundamental);
   const fundamentalsReady = fundamentals.filter(c => statusMap[c.id]?.status === 'ready').length;
   const allFundamentalsReady = fundamentalsReady === fundamentals.length && fundamentals.length > 0;
@@ -35,10 +27,12 @@ function ReadinessGate({ clauses, statusMap, capasOverdue, ncsOverdue }) {
   const scoreOk = pct >= 80;
   const noOverdueCAPAs = capasOverdue === 0;
   const noOverdueNCs = ncsOverdue === 0;
-  const allGreen = allFundamentalsReady && scoreOk && noOverdueCAPAs && noOverdueNCs;
+  // ISO standards define no fundamental clauses — that gate only applies to BRCGS
+  const fundamentalsGateOk = !hasFundamentals || allFundamentalsReady;
+  const allGreen = fundamentalsGateOk && scoreOk && noOverdueCAPAs && noOverdueNCs;
 
   const gates = [
-    { ok: allFundamentalsReady, label: `All fundamental clauses ready`, sub: `${fundamentalsReady}/${fundamentals.length} fundamentals marked Ready` },
+    ...(hasFundamentals ? [{ ok: allFundamentalsReady, label: `All fundamental clauses ready`, sub: `${fundamentalsReady}/${fundamentals.length} fundamentals marked Ready` }] : []),
     { ok: scoreOk,              label: `Readiness score ≥ 80%`,         sub: `Current score: ${pct}%` },
     { ok: noOverdueCAPAs,       label: `No overdue CAPAs`,              sub: capasOverdue > 0 ? `${capasOverdue} overdue — resolve in Action Centre` : 'All CAPAs on track' },
     { ok: noOverdueNCs,         label: `No overdue Non-Conformances`,   sub: ncsOverdue > 0 ? `${ncsOverdue} overdue — resolve in Action Centre` : 'All NCs on track' },
@@ -212,12 +206,9 @@ function BrcAuditChecklistContent() {
       const st = statusMap[c.id];
       rows.push([c.clause_number, c.title, c.is_fundamental ? 'Yes' : 'No', st?.status || 'not_started', st?.evidence_count ?? 0, st?.notes || '']);
     });
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url; link.download = `brc-audit-checklist-${new Date().toISOString().split('T')[0]}.csv`; link.click();
-    URL.revokeObjectURL(url);
+    // Shared helper adds proper escaping, CRLF endings and the UTF-8 BOM
+    // Excel needs for non-ASCII clause text.
+    downloadCSV(exportFilename('audit-checklist', org?.brc_standard || ''), rows);
   };
 
   return (
@@ -228,12 +219,15 @@ function BrcAuditChecklistContent() {
             <CheckSquare className="w-6 h-6 text-primary" /> Pre-Audit Checklist
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {org?.brc_standard ? BRC_STANDARD_LABELS[org.brc_standard] : 'No standard set'} · Verify readiness before your audit. Click any clause to open and manage evidence.
+            {org?.brc_standard ? standardLabel(org.brc_standard) : 'No standard set'} · Verify readiness before your audit. Click any clause to open and manage evidence.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCSV}>
-          <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <StandardSwitcher />
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Readiness gate */}
@@ -243,6 +237,7 @@ function BrcAuditChecklistContent() {
           statusMap={statusMap}
           capasOverdue={capasOverdue}
           ncsOverdue={ncsOverdue}
+          hasFundamentals={standardHasFundamentals(org?.brc_standard)}
         />
       )}
 
@@ -270,7 +265,7 @@ function BrcAuditChecklistContent() {
         {[
           { key: 'all',         label: 'All Clauses' },
           { key: 'not_ready',   label: 'Not Ready' },
-          { key: 'fundamental', label: '★ Fundamentals' },
+          ...(standardHasFundamentals(org?.brc_standard) ? [{ key: 'fundamental', label: '★ Fundamentals' }] : []),
         ].map(f => (
           <button
             key={f.key}
@@ -292,7 +287,7 @@ function BrcAuditChecklistContent() {
             <SectionGroup
               key={sn}
               sectionNum={sn}
-              sectionName={SECTION_NAMES[sn] || `Section ${sn}`}
+              sectionName={sectionName(org?.brc_standard, sn)}
               clauses={clauses}
               statusMap={statusMap}
               filter={filter}

@@ -6,6 +6,8 @@ import useOrganisation from '@/lib/useOrganisation';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import EvidenceLinkModal from '@/components/brc/EvidenceLinkModal';
+import StandardSwitcher from '@/components/brc/StandardSwitcher';
+import { sectionName, standardLabel, standardHasFundamentals } from '@/lib/standardsRegistry';
 import { toast } from 'sonner';
 
 const STATUS_COLORS = {
@@ -17,15 +19,8 @@ const STATUS_COLORS = {
 };
 const STATUS_OPTIONS = ['not_started','in_progress','evidence_attached','ready','needs_review'];
 
-const SECTION_NAMES = {
-  '1': 'Senior Management Commitment',
-  '2': 'Hazard & Risk Management',
-  '3': 'Food Safety & Quality Management',
-  '4': 'Site Standards',
-  '5': 'Product & Process Control',
-  '6': 'Process Control',
-  '7': 'Personnel',
-};
+// Section names come from the standards registry — they differ per standard
+// (BRCGS sections vs the ISO Annex SL structure).
 
 function StatusBadge({ status, clauseId, onStatusChange, saving }) {
   const cfg = STATUS_COLORS[status || 'not_started'];
@@ -282,7 +277,7 @@ function BrcClausesContent() {
       <div className="text-center py-16 space-y-3">
         <ShieldCheck className="w-10 h-10 text-muted-foreground/40 mx-auto" />
         <p className="font-semibold text-foreground">No BRC standard selected</p>
-        <p className="text-sm text-muted-foreground">Go to <a href="/brc/settings" className="underline text-primary">BRC Settings</a> to choose your standard.</p>
+        <p className="text-sm text-muted-foreground">Go to <a href="/brc/settings" className="underline text-primary">Compliance Settings</a> to choose your standard.</p>
       </div>
     );
   }
@@ -292,11 +287,14 @@ function BrcClausesContent() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Clause Mapping</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Work through each section and attach evidence to every clause.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{standardLabel(org?.brc_standard)} — work through each section and attach evidence to every clause.</p>
         </div>
-        <div className="relative w-56">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input className="pl-8 h-9 text-sm" placeholder="Search clauses…" value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <StandardSwitcher />
+          <div className="relative w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input className="pl-8 h-9 text-sm" placeholder="Search clauses…" value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
         </div>
       </div>
 
@@ -308,7 +306,8 @@ function BrcClausesContent() {
           { key: 'in_progress',   label: 'In Progress' },
           { key: 'evidence_attached', label: 'Evidence Attached' },
           { key: 'ready',         label: `Ready (${readyCount})` },
-          { key: 'fundamental',   label: '★ Fundamentals' },
+          // ISO standards don't designate fundamental clauses — hide the filter
+          ...(standardHasFundamentals(org?.brc_standard) ? [{ key: 'fundamental', label: '★ Fundamentals' }] : []),
         ].map(f => (
           <button
             key={f.key}
@@ -326,7 +325,7 @@ function BrcClausesContent() {
         <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>
       ) : clauses.length === 0 ? (
         <div className="text-center py-16 text-sm text-muted-foreground">
-          No clauses found for this standard. An admin can load the clause library from BRC Settings.
+          No clauses found for this standard. An admin can load the clause library from Compliance Settings.
         </div>
       ) : sections.length === 0 ? (
         <div className="text-center py-12 text-sm text-muted-foreground">No clauses match the selected filter.</div>
@@ -336,7 +335,7 @@ function BrcClausesContent() {
             <SectionPanel
               key={sn}
               sectionNum={sn}
-              sectionName={SECTION_NAMES[sn] || `Section ${sn}`}
+              sectionName={sectionName(org?.brc_standard, sn)}
               clauses={filteredClauses}
               statusMap={statusMap}
               savingId={savingId}

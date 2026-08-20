@@ -14,7 +14,7 @@ function StubContent({ title, description }) {
         <div>
           <p className="font-semibold text-foreground">Coming soon</p>
           <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-            {description || `The ${title} module is part of the BRC Compliance extension and will be available shortly.`}
+            {description || `The ${title} module is part of the Compliance module and will be available shortly.`}
           </p>
         </div>
       </div>

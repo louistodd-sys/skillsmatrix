@@ -21,6 +21,15 @@
     "user_name": {
       "type": "string",
       "title": "User Display Name"
+    },
+    "is_managed_member": {
+      "type": "boolean",
+      "title": "Managed Member (tracked employee without a login)",
+      "default": false
+    },
+    "member_id": {
+      "type": "string",
+      "title": "Managed Member ID"
     }
   },
   "required": [

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, TrendingUp, AlertTriangle, Clock, CheckCircle2, RefreshCw, Bell, ChevronRight, Link2, BookOpen, ArrowRight, Settings, FileText, ClipboardCheck, XCircle } from 'lucide-react';
+import { ShieldCheck, TrendingUp, AlertTriangle, Clock, CheckCircle2, RefreshCw, Bell, ChevronRight, Link2, BookOpen, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import BrcModuleGuard from '@/components/BrcModuleGuard';
 import useOrganisation from '@/lib/useOrganisation';
 import { BRC_STANDARD_LABELS, hasMultipleModules } from '@/lib/brcModuleGuard';
+import { standardHasFundamentals } from '@/lib/standardsRegistry';
+import StandardSwitcher from '@/components/brc/StandardSwitcher';
 import ReadinessScoreRing from '@/components/brc/ReadinessScoreRing';
 import UrgentItems from '@/components/brc/UrgentItems';
 import TeamCertStatus from '@/components/brc/TeamCertStatus';
@@ -36,7 +38,11 @@ function computeStage({ org, clauses, statuses, capas, ncs }) {
   const overdueNcs   = ncs.filter(n => (n.status === 'open' || n.status === 'under_investigation') && n.due_date && new Date(n.due_date) < today).length;
   if (overdueCapas > 0 || overdueNcs > 0) return 4;
   const score = org?.brc_readiness_score;
-  const fundamentals = clauses.filter(c => c.is_fundamental);
+  // BRCGS designates fundamental clauses; ISO standards don't, so for them
+  // the Verify stage gates on the score alone.
+  const fundamentals = standardHasFundamentals(org?.brc_standard)
+    ? clauses.filter(c => c.is_fundamental)
+    : [];
   const fundamentalsReady = fundamentals.every(c => statusMap[c.id]?.status === 'ready');
   if (!fundamentalsReady || (score?.overall_percent ?? 0) < 80) return 5;
   return 6;
@@ -45,9 +51,9 @@ function computeStage({ org, clauses, statuses, capas, ncs }) {
 function getNextStepCard(stage, { notStartedCount, noEvidenceCount, overdueCapasCount, overdueNcsCount, score, fundamentalsNotReady }) {
   switch (stage) {
     case 1: return {
-      title: 'Start here: Configure your BRC standard',
-      body: 'Choose which BRCGS standard applies to your site and set your target audit date. This unlocks clause mapping and the readiness score.',
-      cta: 'Go to BRC Settings', href: '/brc/settings', color: 'border-blue-200 bg-blue-50', ctaColor: 'bg-blue-600 hover:bg-blue-700 text-white',
+      title: 'Start here: Choose your standards',
+      body: 'Choose which standards apply to your site — BRCGS for food and packaging, or ISO 9001 / 14001 / 45001 for any manufacturer — and set your target audit date. This unlocks clause mapping and the readiness score.',
+      cta: 'Go to Compliance Settings', href: '/brc/settings', color: 'border-blue-200 bg-blue-50', ctaColor: 'bg-blue-600 hover:bg-blue-700 text-white',
     };
     case 2: return {
       title: `${notStartedCount} clause${notStartedCount !== 1 ? 's' : ''} not yet started`,
@@ -195,7 +201,7 @@ function BrcDashboardContent() {
   const noEvidenceCount = clauses.filter(c => !(statusMap[c.id]?.evidence_count > 0)).length;
   const overdueCapasCount = capas.filter(c => c.status === 'overdue' || (c.due_date && new Date(c.due_date) < today && c.status !== 'completed' && c.status !== 'verified')).length;
   const overdueNcsCount   = ncs.filter(n => (n.status === 'open' || n.status === 'under_investigation') && n.due_date && new Date(n.due_date) < today).length;
-  const fundamentals = clauses.filter(c => c.is_fundamental);
+  const fundamentals = standardHasFundamentals(org?.brc_standard) ? clauses.filter(c => c.is_fundamental) : [];
   const fundamentalsNotReady = fundamentals.filter(c => statusMap[c.id]?.status !== 'ready').length;
 
   const nextStep = !loading ? getNextStepCard(currentStage, {
@@ -209,12 +215,15 @@ function BrcDashboardContent() {
         <div>
           <h1 className="text-2xl font-bold font-jakarta text-foreground flex items-center gap-2">
             <ShieldCheck className="w-6 h-6 text-primary" />
-            BRC Compliance Readiness
+            Compliance &amp; Audit Readiness
           </h1>
           {standardLabel
-            ? <p className="text-sm text-muted-foreground mt-0.5">{standardLabel}</p>
+            ? <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                <p className="text-sm text-muted-foreground">{standardLabel}</p>
+                <StandardSwitcher />
+              </div>
             : <p className="text-sm text-amber-600 mt-0.5">
-                No standard selected — <a href="/brc/settings" className="underline">configure in BRC Settings</a>.
+                No standard selected — <a href="/brc/settings" className="underline">configure in Compliance Settings</a>.
               </p>
           }
         </div>
@@ -302,7 +311,7 @@ function BrcDashboardContent() {
           </div>
         </div>
         <div className="lg:col-span-2">
-          <SectionReadiness bySection={score?.by_section} />
+          <SectionReadiness bySection={score?.by_section} standard={org?.brc_standard} />
         </div>
       </div>
 
@@ -336,8 +345,8 @@ function BrcDashboardContent() {
 
       {!org?.brc_standard && !loading && (
         <div className="bg-rag-amber-light border border-rag-amber/30 rounded-xl p-5 text-sm text-rag-amber-text">
-          <strong>Setup required:</strong> Configure your BRC standard in{' '}
-          <a href="/brc/settings" className="underline font-medium">BRC Settings</a>{' '}
+          <strong>Setup required:</strong> Choose your standards in{' '}
+          <a href="/brc/settings" className="underline font-medium">Compliance Settings</a>{' '}
           to unlock clause mapping and readiness scoring.
         </div>
       )}

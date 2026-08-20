@@ -14,6 +14,7 @@ import useOrganisation from '@/lib/useOrganisation';
 import NotificationCenter from '@/components/NotificationCenter';
 import ModuleSwitcher from '@/components/ModuleSwitcher';
 import { hasBrcModule, MODULE_SKILLS_MATRIX, MODULE_BRC_COMPLIANCE } from '@/lib/brcModuleGuard';
+import { orgHasFoodSectorStandard } from '@/lib/standardsRegistry';
 import { PageMetaProvider, usePageMetaValue } from '@/lib/pageMeta';
 
 // ─── Navigation definitions ───────────────────────────────────────────────
@@ -71,7 +72,7 @@ const viewerNav = [
   },
 ];
 
-// ─── BRC nav (admin/quality_manager) ───────────────────────────────────────
+// ─── Compliance nav (admins and managers) ────────────────────────────────────
 const brcAdminNav = [
   {
     section: 'Getting Started',
@@ -82,7 +83,7 @@ const brcAdminNav = [
   {
     section: 'Compliance',
     items: [
-      { label: 'BRC Dashboard',      icon: ShieldCheck,    path: '/brc' },
+      { label: 'Dashboard',          icon: ShieldCheck,    path: '/brc' },
       { label: 'Action Centre',      icon: Bell,           path: '/brc/action-centre' },
       { label: 'Analytics',          icon: TrendingUp,     path: '/brc/analytics' },
       { label: 'Audit Checklist',    icon: CheckSquare,    path: '/brc/audit-checklist' },
@@ -104,8 +105,9 @@ const brcAdminNav = [
     items: [
       { label: 'Suppliers',          icon: Truck,          path: '/brc/suppliers' },
       { label: 'Calibration',        icon: Wrench,         path: '/brc/calibration' },
-      { label: 'Glass Register',     icon: FlaskConical,   path: '/brc/glass-register' },
-      { label: 'Pest Control',       icon: Bug,            path: '/brc/pest-control' },
+      // Food-sector registers — hidden unless a food-sector standard is enabled
+      { label: 'Glass Register',     icon: FlaskConical,   path: '/brc/glass-register', foodOnly: true },
+      { label: 'Pest Control',       icon: Bug,            path: '/brc/pest-control',   foodOnly: true },
       { label: 'Training',           icon: GraduationCap,  path: '/brc/training' },
     ],
   },
@@ -113,7 +115,7 @@ const brcAdminNav = [
     section: 'Settings',
     items: [
       { label: 'Mgmt Review',        icon: Users2,         path: '/brc/management-review' },
-      { label: 'BRC Settings',       icon: Settings,       path: '/brc/settings' },
+      { label: 'Compliance Settings', icon: Settings,      path: '/brc/settings' },
     ],
   },
 ];
@@ -130,9 +132,9 @@ const pageTitles = {
   '/audit-log':              'Audit Log',
   '/settings':               'Settings',
   '/my-profile':             'My Skills',
-  '/brc':                    'BRC Dashboard',
+  '/brc':                    'Compliance Dashboard',
   '/brc/clauses':            'Clause Mapping',
-  '/brc/documents':          'Document Control',
+  '/brc/documents':          'Document Register',
   '/brc/audits':             'Internal Audits',
   '/brc/non-conformances':   'Non-Conformances',
   '/brc/capas':              'CAPA Register',
@@ -147,7 +149,7 @@ const pageTitles = {
   '/brc/analytics':          'Compliance Analytics',
   '/brc/audit-checklist':    'Pre-Audit Checklist',
   '/brc/guide':              'Audit Preparation Guide',
-  '/brc/settings':           'BRC Settings',
+  '/brc/settings':           'Compliance Settings',
 };
 
 function getPageTitle(pathname) {
@@ -234,10 +236,20 @@ function LayoutShell() {
     else navigate('/');
   };
 
-  // Determine which nav to show based on active module + role
+  // Determine which nav to show based on active module + role.
+  // Managers get the compliance nav too — locking the module to a single
+  // admin recreated the "everything lives in one QA manager's head" problem.
   let navGroups;
   if (activeModule === MODULE_BRC_COMPLIANCE && hasBrcModule(org)) {
-    navGroups = (role === 'admin' || role === 'quality_manager') ? brcAdminNav : viewerNav;
+    const foodOrg = orgHasFoodSectorStandard(org);
+    navGroups = (role === 'admin' || role === 'manager' || role === 'quality_manager')
+      ? brcAdminNav
+          .map(group => ({
+            ...group,
+            items: group.items.filter(item => !item.foodOnly || foodOrg),
+          }))
+          .filter(group => group.items.length > 0)
+      : viewerNav;
   } else {
     navGroups = role === 'admin' ? adminNav : role === 'manager' ? managerNav : viewerNav;
   }

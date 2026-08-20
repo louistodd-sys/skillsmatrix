@@ -24,8 +24,8 @@ const MODULE_INFO = {
   },
   brc_compliance: {
     icon: ShieldCheck,
-    label: 'BRC Compliance Readiness',
-    description: 'BRCGS clause mapping, document register, audit scheduling, NC/CAPA workflows, and supplier registers.',
+    label: 'Compliance & Audit Readiness',
+    description: 'BRCGS and ISO clause mapping, document register, audit scheduling, NC/CAPA workflows, and supplier registers.',
     alwaysOn: false,
   },
 };

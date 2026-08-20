@@ -75,9 +75,9 @@ Deno.serve(async (req) => {
       exceeds: true,
       reason: 'module_not_entitled',
       upgrade_prompt: {
-        target: 'BRC Compliance Module',
-        message: `Your organisation does not have access to the ${module === 'brc_compliance' ? 'BRC Compliance' : module} module.`,
-        unlocks: ['BRC Compliance Readiness module'],
+        target: 'Compliance & Audit Readiness Module',
+        message: `Your organisation does not have access to the ${module === 'brc_compliance' ? 'Compliance & Audit Readiness' : module} module.`,
+        unlocks: ['Compliance & Audit Readiness module (BRCGS + ISO)'],
       },
     });
   }
@@ -101,15 +101,21 @@ Deno.serve(async (req) => {
     currentCount = cats.length;
     scenario = 'category_limit';
   } else if (resource === 'manager_seat' || resource === 'admin_seat') {
-    // A seat is held by an actual user with the role, or reserved by a
-    // pending invitation for it. (Counting accepted invitations, as before,
-    // was always zero and made seat limits unenforceable.)
+    // A seat is held by an actual user with the role, or reserved by a live
+    // pending invitation for it. Expired invitations release their seat, and
+    // multiple invites to the same address reserve only one.
     const role = resource === 'admin_seat' ? 'admin' : 'manager';
     const [holders, pending] = await Promise.all([
       base44.asServiceRole.entities.User.filter({ organisation_id: orgId, role }),
       base44.asServiceRole.entities.Invitation.filter({ organisation_id: orgId, role, status: 'pending' }),
     ]);
-    currentCount = holders.length + pending.length;
+    const now = new Date();
+    const liveInviteEmails = new Set(
+      pending
+        .filter(inv => !inv.expires_at || new Date(inv.expires_at) > now)
+        .map(inv => (inv.email || '').trim().toLowerCase())
+    );
+    currentCount = holders.length + liveInviteEmails.size;
     scenario = role === 'admin' ? 'admin_seat_limit' : 'manager_seat_limit';
   } else if (resource === 'csv_export') {
     const tierFeatures = { free: false, starter: true, growth: true, scale: true };

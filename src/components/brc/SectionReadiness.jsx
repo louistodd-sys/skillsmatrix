@@ -5,7 +5,9 @@ import { Link } from 'react-router-dom';
 /**
  * SectionReadiness — horizontal bar per BRC section from cached brc_readiness_score.by_section
  */
-export default function SectionReadiness({ bySection }) {
+import { sectionName } from '@/lib/standardsRegistry';
+
+export default function SectionReadiness({ bySection, standard }) {
   const sections = useMemo(() => {
     if (!bySection) return [];
     return Object.entries(bySection).map(([section, counts]) => {
@@ -29,7 +31,7 @@ export default function SectionReadiness({ bySection }) {
         {sections.map(({ section, red, amber, green, total, pct }) => (
           <li key={section} className="px-5 py-3.5">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm font-medium text-foreground">Section {section}</span>
+              <span className="text-sm font-medium text-foreground">{section}. {sectionName(standard, section)}</span>
               <span className={`text-xs font-bold ${
                 pct >= 80 ? 'text-rag-green-text' : pct >= 50 ? 'text-rag-amber-text' : 'text-rag-red-text'
               }`}>{pct}%</span>

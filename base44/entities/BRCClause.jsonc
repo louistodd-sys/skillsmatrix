@@ -10,7 +10,10 @@
         "brcgs_food",
         "brcgs_storage",
         "brcgs_agents_brokers",
-        "brcgs_consumer_products"
+        "brcgs_consumer_products",
+        "iso_9001",
+        "iso_14001",
+        "iso_45001"
       ]
     },
     "issue_number": {

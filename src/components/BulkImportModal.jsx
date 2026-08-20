@@ -100,6 +100,10 @@ export default function BulkImportModal({ orgId, onClose, onImported }) {
     const memberByTeamName = new Map(members.map(m => [`${m.team_id}::${(m.user_name || '').toLowerCase().trim()}`, m]));
     const memberByEmail = new Map(members.filter(m => m.user_email).map(m => [m.user_email.toLowerCase().trim(), m]));
 
+    // Duplicates INSIDE the file are caught here too — the database snapshot
+    // alone can't see two identical rows in one upload.
+    const seenInFile = new Map(); // key → first rowNum
+
     const rows = rawRows.slice(1).map((cells, idx) => {
       const rowNum = idx + 2; // 1-based + header
       const team = mapping.team >= 0 ? String(cells[mapping.team] || '').trim() : '';
@@ -110,6 +114,13 @@ export default function BulkImportModal({ orgId, onClose, onImported }) {
       if (!team) return { rowNum, name, action: 'error', reason: 'Team is empty' };
       if (!name) return { rowNum, team, action: 'error', reason: 'Name is empty' };
       if (email && !EMAIL_RE.test(email)) return { rowNum, team, name, email, action: 'error', reason: `Invalid email: ${email}` };
+
+      const fileKeys = [`${team.toLowerCase()}::${name.toLowerCase()}`, ...(email ? [`email::${email.toLowerCase()}`] : [])];
+      const dupOf = fileKeys.map(k => seenInFile.get(k)).find(v => v !== undefined);
+      if (dupOf !== undefined) {
+        return { rowNum, team, name, email, action: 'skip', reason: `Duplicate of row ${dupOf} in this file` };
+      }
+      fileKeys.forEach(k => seenInFile.set(k, rowNum));
 
       const existingTeam = teamByName.get(team.toLowerCase());
       const existing =
@@ -123,7 +134,7 @@ export default function BulkImportModal({ orgId, onClose, onImported }) {
         if (Object.keys(changes).length === 0) {
           return { rowNum, team, name, email, action: 'skip', reason: 'Already exists, nothing to update' };
         }
-        return { rowNum, team, name, email, action: 'update', existingId: existing.id, changes, reason: `Update ${Object.keys(changes).join(', ')}` };
+        return { rowNum, team, name, email, action: 'update', existingId: existing.id, existingUserId: existing.user_id, changes, reason: `Update ${Object.keys(changes).join(', ')}` };
       }
 
       return { rowNum, team, name, email, action: 'create', newTeam: !existingTeam, reason: existingTeam ? 'New person' : 'New person + new team' };
@@ -220,7 +231,24 @@ export default function BulkImportModal({ orgId, onClose, onImported }) {
       for (const row of actionable) {
         try {
           if (row.action === 'update') {
-            await base44.entities.TeamMember.update(row.existingId, row.changes);
+            // A person can belong to several teams (several TeamMember rows
+            // sharing user_id), and their name is denormalised onto
+            // assessments — update everywhere, like EditEmployeeModal does.
+            const rowsForUser = await base44.entities.TeamMember.filter({
+              organisation_id: orgId, user_id: row.existingUserId,
+            });
+            await Promise.all(
+              (rowsForUser.length ? rowsForUser : [{ id: row.existingId }])
+                .map(m => base44.entities.TeamMember.update(m.id, row.changes))
+            );
+            if (row.changes.user_name) {
+              const theirAssessments = await base44.entities.SkillAssessment.filter({
+                organisation_id: orgId, user_id: row.existingUserId,
+              });
+              await Promise.all(theirAssessments.map(a =>
+                base44.entities.SkillAssessment.update(a.id, { user_name: row.changes.user_name })
+              ));
+            }
             updated++;
           } else {
             let team = teamByName.get(row.team.toLowerCase());
