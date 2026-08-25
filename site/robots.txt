@@ -1,0 +1,9 @@
+# https://skillsmatrixapp.com/robots.txt
+User-agent: *
+Allow: /
+
+# The application itself is behind authentication — nothing there is
+# crawlable, and indexing login redirects wastes crawl budget.
+Disallow: /api/
+
+Sitemap: https://skillsmatrixapp.com/sitemap.xml

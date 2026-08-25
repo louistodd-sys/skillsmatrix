@@ -1,0 +1,12 @@
+{
+  "name": "Skills Matrix App",
+  "short_name": "Skills Matrix",
+  "description": "Skills matrix and audit-readiness software for manufacturing SMEs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a3a7a",
+  "icons": [
+    { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

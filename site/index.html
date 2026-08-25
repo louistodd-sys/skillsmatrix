@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- ==========================================================================
+     DEPLOY CHECKLIST — see site/README.md
+     1. SITE_URL  : https://skillsmatrixapp.com          (canonical + sitemap)
+     2. APP_URL   : https://app.skillsmatrixapp.com      (every CTA target)
+     3. Statutory : fill Companies House no., ICO reg. and registered office
+                    in the footer (search "STATUTORY").
+     Change 1 & 2 with a single find-and-replace across site/.
+     ========================================================================== -->
+
+<title>Skills Matrix App — Skills Matrix &amp; Audit Readiness Software for UK Manufacturers</title>
+<meta name="description" content="Replace the training spreadsheet with a live skills matrix. Colour-coded competence, certification expiry reminders that actually send, gap analysis and clause-by-clause audit evidence for BRCGS, ISO 9001, ISO 14001 and ISO 45001. Free for up to 5 employees.">
+<link rel="canonical" href="https://skillsmatrixapp.com/">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="author" content="Conryx Ltd">
+<meta name="theme-color" content="#1a3a7a">
+<meta name="color-scheme" content="light">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Skills Matrix App">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://skillsmatrixapp.com/">
+<meta property="og:title" content="Skills Matrix App — Skills Matrix &amp; Audit Readiness Software">
+<meta property="og:description" content="A live, colour-coded skills matrix with certification expiry reminders, gap analysis and clause-by-clause audit evidence for BRCGS and ISO. Built for manufacturing SMEs.">
+<meta property="og:image" content="https://skillsmatrixapp.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Skills Matrix App — a colour-coded competency matrix showing current, expiring and expired certifications.">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Skills Matrix App — Skills Matrix &amp; Audit Readiness Software">
+<meta name="twitter:description" content="A live, colour-coded skills matrix with certification expiry reminders, gap analysis and clause-by-clause audit evidence for BRCGS and ISO.">
+<meta name="twitter:image" content="https://skillsmatrixapp.com/assets/og-image.png">
+<meta name="twitter:image:alt" content="Skills Matrix App — a colour-coded competency matrix.">
+
+<!-- Icons & manifest -->
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap"></noscript>
+
+<link rel="stylesheet" href="/assets/styles.css">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://skillsmatrixapp.com/#organisation",
+      "name": "Conryx Ltd",
+      "url": "https://skillsmatrixapp.com/",
+      "logo": "https://skillsmatrixapp.com/assets/og-image.png",
+      "address": { "@type": "PostalAddress", "addressCountry": "GB" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://skillsmatrixapp.com/#website",
+      "url": "https://skillsmatrixapp.com/",
+      "name": "Skills Matrix App",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://skillsmatrixapp.com/#organisation" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://skillsmatrixapp.com/#software",
+      "name": "Skills Matrix App",
+      "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Competency management and quality compliance software",
+      "operatingSystem": "Web browser",
+      "url": "https://skillsmatrixapp.com/",
+      "description": "Skills matrix and audit-readiness software for manufacturing SMEs. Track workforce competence and certification expiry with RAG status, run gap analysis against team requirements, and map audit evidence clause by clause for BRCGS, ISO 9001, ISO 14001 and ISO 45001.",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://skillsmatrixapp.com/#organisation" },
+      "featureList": [
+        "Live skills matrix with RAG status",
+        "Certification expiry reminders by email and in-app",
+        "Weekly expiry digest for managers",
+        "Team required-skills gap analysis",
+        "Append-only assessment history with assessor and date",
+        "Bulk CSV import and CSV export",
+        "Industry skill templates",
+        "Clause-by-clause audit evidence mapping",
+        "Document, supplier, calibration and complaint registers",
+        "Non-conformance and CAPA workflow",
+        "Internal audit scheduling and audit checklist"
+      ],
+      "offers": [
+        { "@type": "Offer", "name": "Free",    "price": "0",   "priceCurrency": "GBP", "description": "Up to 5 employees, 15 skills, 3 categories, 1 admin seat.", "availability": "https://schema.org/InStock" },
+        { "@type": "Offer", "name": "Starter", "price": "39",  "priceCurrency": "GBP", "description": "Up to 30 employees, 50 skills, gap analysis reports and CSV export. Per month, excluding VAT.", "availability": "https://schema.org/InStock" },
+        { "@type": "Offer", "name": "Growth",  "price": "79",  "priceCurrency": "GBP", "description": "Up to 100 employees, unlimited skills and categories, unlimited managers. Per month, excluding VAT.", "availability": "https://schema.org/InStock" },
+        { "@type": "Offer", "name": "Scale",   "price": "149", "priceCurrency": "GBP", "description": "Up to 250 employees, unlimited admins and managers. Per month, excluding VAT.", "availability": "https://schema.org/InStock" },
+        { "@type": "Offer", "name": "Compliance & Audit Readiness add-on", "price": "49", "priceCurrency": "GBP", "description": "Clause-by-clause audit readiness module. Per month, excluding VAT.", "availability": "https://schema.org/InStock" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://skillsmatrixapp.com/#faq",
+      "mainEntity": [
+              {
+                      "@type": "Question",
+                      "name": "Do I need a credit card to start?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "No. The Free plan is free forever for up to 5 employees and needs no card. Paid plans include a 14-day trial that also starts without a card — you only enter payment details if you decide to continue."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Do I pay for every employee on the matrix?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "No. Employees are tracked records, not licences. Your plan limits how many people you can track and how many admin and manager logins you have. Shop-floor operators who never sign in cost nothing per head — which is the opposite of how most competency tools price."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Which audit standards does the Compliance module support?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Clause libraries ship today for BRCGS Packaging Materials (Issue 7), ISO 9001:2015, ISO 14001:2015 and ISO 45001:2018. Further BRCGS standards — Food Safety, Storage & Distribution, Agents & Brokers and Consumer Products — are on the roadmap. The clause, evidence and readiness engine itself is standard-agnostic, so adding a library is content work rather than a rebuild."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Will I actually be warned before a certificate expires?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Yes — this is the part most tools get wrong. A scheduled engine runs daily. As each assessment crosses a warning threshold (90, 60 and 30 days by default, configurable per skill) it notifies the person's team managers and your admins in-app, and emails on expiry. A Monday digest summarises everything expired or expiring within 90 days. Each event fires once per assessment per threshold, so nobody is spammed — and a missed run is caught up on the next one rather than skipped."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Can I move my existing spreadsheet across?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Import your people from CSV, then start from one of six industry skill templates — manufacturing and engineering, food production and FMCG, healthcare and care, construction and trades, retail and hospitality, or office and professional services — and edit from there rather than typing a taxonomy from scratch. Most sites have a usable matrix the same afternoon."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Can I get my data back out?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Yes. CSV export is available from Starter upwards and is never withheld to force an upgrade. There is a full organisation export and a subject access export for individual records. If a paid plan lapses, your organisation moves down to the Free plan rather than being locked out, and your data stays intact."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Is it GDPR compliant?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Skills Matrix App is operated by Conryx Ltd, a company registered in England and Wales. A Data Processing Agreement, privacy policy and cookie policy are published, cookie consent is collected before non-essential cookies are set, subject access exports are supported, and access is limited by admin, manager and viewer roles."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Do I have to buy the Compliance module?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "No. It is an optional add-on at £49 per month excluding VAT, independent of your Skills Matrix plan, with a 14-day trial. The skills matrix works perfectly well on its own. When the module is on, the two share people, teams, notifications and the activity log — and the compliance training register fills itself from your assessments."
+                      }
+              },
+              {
+                      "@type": "Question",
+                      "name": "Does it work on a tablet on the shop floor?",
+                      "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Yes — the app is responsive and runs in the browser on a tablet or phone, with no install and nothing to deploy to devices. It is a connected web application, so it needs a network connection; there is no offline mode today."
+                      }
+              }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 14h6M9 18h4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13A4 4 0 0 1 16 11"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.8 2.8 0 0 1-4-4z"/><path d="m14.7 6.3 3-3"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7L12.5 20"/></symbol>
+</svg>
+
+<header class="site-header" id="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="/" aria-label="Skills Matrix App — home">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect width="32" height="32" rx="7" fill="#1A3A7A"/>
+        <rect x="7" y="7" width="5" height="5" rx="1" fill="#0D87A8"/>
+        <rect x="14" y="7" width="5" height="5" rx="1" fill="#0D87A8" opacity=".6"/>
+        <rect x="21" y="7" width="4" height="5" rx="1" fill="#0D87A8" opacity=".3"/>
+        <rect x="7" y="14" width="5" height="5" rx="1" fill="#fff" opacity=".9"/>
+        <rect x="14" y="14" width="5" height="5" rx="1" fill="#0D87A8"/>
+        <rect x="21" y="14" width="4" height="5" rx="1" fill="#0D87A8" opacity=".6"/>
+        <rect x="7" y="21" width="5" height="4" rx="1" fill="#fff" opacity=".5"/>
+        <rect x="14" y="21" width="5" height="4" rx="1" fill="#fff" opacity=".9"/>
+        <rect x="21" y="21" width="4" height="4" rx="1" fill="#0D87A8"/>
+      </svg>
+      <span class="brand__name">Skills&nbsp;Matrix<span>&nbsp;App</span></span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+      <svg width="22" height="22" aria-hidden="true"><use href="#i-menu"/></svg>
+    </button>
+
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <ul class="nav__list">
+        <li><a class="nav__link" href="#how-it-works">How it works</a></li>
+        <li><a class="nav__link" href="#features">Skills matrix</a></li>
+        <li><a class="nav__link" href="#compliance">Compliance</a></li>
+        <li><a class="nav__link" href="#pricing">Pricing</a></li>
+        <li><a class="nav__link" href="#faq">FAQ</a></li>
+      </ul>
+
+      <div class="header-cta">
+        <a class="btn btn--ghost btn--sm" href="https://app.skillsmatrixapp.com/">Sign in</a>
+        <a class="btn btn--primary btn--sm" href="https://app.skillsmatrixapp.com/">Start free</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ==================================================== HERO ========== -->
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="eyebrow">
+          <svg width="14" height="14" aria-hidden="true"><use href="#i-shield"/></svg>
+          Skills &amp; audit readiness for UK manufacturers
+        </p>
+
+        <h1>Nobody fails an audit on purpose &mdash; they fail because a certificate <em>quietly expired</em></h1>
+
+        <p class="lede hero__lede">
+          Skills Matrix App turns the training spreadsheet nobody has updated since March into a
+          live competency record — colour-coded, evidence-backed, and mapped to the clauses your
+          auditor actually walks. Built for manufacturing SMEs working to BRCGS, ISO&nbsp;9001,
+          ISO&nbsp;14001 and ISO&nbsp;45001.
+        </p>
+
+        <div class="btn-row">
+          <a class="btn btn--primary" href="https://app.skillsmatrixapp.com/">
+            Start free — no card needed
+            <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+          </a>
+          <a class="btn btn--ghost" href="#how-it-works">See how it works</a>
+        </div>
+
+        <ul class="hero__proof">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg> Free forever for up to 5 people</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg> 14-day trial, no card</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg> Export your data any time</li>
+        </ul>
+      </div>
+
+      <!-- Matrix mock -->
+      <div class="mock" role="img" aria-label="Screenshot-style illustration of the skills matrix: a grid of people against skills, where each cell is green for current, amber for expiring, red for expired or below the required level, and grey for not yet assessed. A warning strip reads: Forklift Operation expires for J. Okafor in 11 days.">
+        <div class="mock__bar" aria-hidden="true">
+          <span class="mock__dot"></span><span class="mock__dot"></span><span class="mock__dot"></span>
+          <span class="mock__title">Skills Matrix · Production Line A</span>
+        </div>
+        <div class="mock__body" aria-hidden="true">
+          <ul class="mock__legend">
+            <li><i class="swatch swatch--g"></i>Current</li>
+            <li><i class="swatch swatch--a"></i>Expiring</li>
+            <li><i class="swatch swatch--r"></i>Expired / below level</li>
+            <li><i class="swatch swatch--n"></i>Not assessed</li>
+          </ul>
+          <div class="matrix-scroll">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th scope="col">Team member</th>
+                <th scope="col">Manual Handling</th>
+                <th scope="col">Forklift Operation</th>
+                <th scope="col">COSHH Awareness</th>
+                <th scope="col">Allergen Awareness</th>
+                <th scope="col">CNC Operation</th>
+                <th scope="col">Quality Inspection</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">S. Whitaker</th>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">4</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">3</span></td>
+                <td><span class="cell cell--a">2</span></td>
+              </tr>
+              <tr>
+                <th scope="row">J. Okafor</th>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--a">3</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--r">✗</span></td>
+                <td><span class="cell cell--g">4</span></td>
+                <td><span class="cell cell--g">3</span></td>
+              </tr>
+              <tr>
+                <th scope="row">A. Nowak</th>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--n">–</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--a">2</span></td>
+                <td><span class="cell cell--n">–</span></td>
+              </tr>
+              <tr>
+                <th scope="row">D. Marsh</th>
+                <td><span class="cell cell--r">✗</span></td>
+                <td><span class="cell cell--n">–</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">3</span></td>
+                <td><span class="cell cell--g">4</span></td>
+              </tr>
+              <tr>
+                <th scope="row">P. Ellery</th>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--g">3</span></td>
+                <td><span class="cell cell--a">✓</span></td>
+                <td><span class="cell cell--g">✓</span></td>
+                <td><span class="cell cell--n">–</span></td>
+                <td><span class="cell cell--g">3</span></td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="mock__alert">
+            <svg aria-hidden="true"><use href="#i-alert"/></svg>
+            <span><strong>Forklift Operation</strong> expires for J.&nbsp;Okafor in 11 days — their line manager
+            and your admins were emailed this morning.</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================ STANDARDS STRIP === -->
+  <section class="strip" aria-label="Standards supported">
+    <div class="wrap">
+      <p class="strip__label">Built around the standards you are audited against</p>
+      <ul class="strip__items">
+        <li>BRCGS Packaging Materials</li>
+        <li>ISO 9001:2015</li>
+        <li>ISO 14001:2015</li>
+        <li>ISO 45001:2018</li>
+        <li>HACCP &amp; allergen training records</li>
+        <li>Customer &amp; second-party audits</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================================================== PROBLEM ========= -->
+  <section class="section section--shell" id="why">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">The problem</p>
+        <h2>A spreadsheet never tells you something is wrong</h2>
+        <p class="lede">
+          It sits there looking finished. It has no idea that three tickets lapsed last month, that
+          the operator you moved to nights was never signed off on the line, or that your auditor
+          arrives in nine days.
+        </p>
+      </div>
+
+      <div class="grid grid--4">
+        <article class="pain">
+          <span class="icon icon--red"><svg aria-hidden="true"><use href="#i-clock"/></svg></span>
+          <h3>Certificates expire in silence</h3>
+          <p>Forklift, first aid, food hygiene, allergen awareness — all with a date nobody is watching. You find out during the audit, or after the incident.</p>
+          <p class="pain__fix"><svg aria-hidden="true"><use href="#i-check"/></svg> A daily reminder engine warns managers at 90, 60 and 30 days, then emails on expiry.</p>
+        </article>
+
+        <article class="pain">
+          <span class="icon icon--red"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+          <h3>Evidence lives in six places</h3>
+          <p>Certificates in a filing cabinet, sign-off sheets in a drawer, a training log on a shared drive, and the matrix itself in someone's Downloads folder.</p>
+          <p class="pain__fix"><svg aria-hidden="true"><use href="#i-check"/></svg> Evidence attaches to the record it proves, and links to the clause that demands it.</p>
+        </article>
+
+        <article class="pain">
+          <span class="icon icon--red"><svg aria-hidden="true"><use href="#i-users"/></svg></span>
+          <h3>It's stale the day you build it</h3>
+          <p>People join, move team, get signed off, leave. Maintaining a grid by hand is a job nobody owns, so it quietly stops being true.</p>
+          <p class="pain__fix"><svg aria-hidden="true"><use href="#i-check"/></svg> Assessments are recorded once, in seconds, and the whole matrix recolours itself.</p>
+        </article>
+
+        <article class="pain">
+          <span class="icon icon--red"><svg aria-hidden="true"><use href="#i-clipboard"/></svg></span>
+          <h3>Audit prep becomes a project</h3>
+          <p>Two weeks of chasing paper to reassemble what you already knew, because nothing was organised the way the standard is written.</p>
+          <p class="pain__fix"><svg aria-hidden="true"><use href="#i-check"/></svg> Evidence is mapped clause by clause, so the pack assembles itself as you work.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== HOW IT WORKS ======== -->
+  <section class="section" id="how-it-works">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">How it works</p>
+        <h2>Live matrix in an afternoon, not a quarter</h2>
+        <p class="lede">
+          There is no implementation project and no consultant. Three steps, and the first one starts
+          from a template rather than a blank page.
+        </p>
+      </div>
+
+      <div class="steps">
+        <article class="step">
+          <span class="step__num"></span>
+          <h3>Build the matrix</h3>
+          <p>Import your people from CSV, then pick the industry template closest to your operation and trim it. You are editing a starting point, not inventing a taxonomy.</p>
+          <ul>
+            <li>Six industry templates, pre-populated with categories and skills</li>
+            <li>Bulk CSV import for people</li>
+            <li>Binary skills (competent / not competent) and 0–4 levelled skills</li>
+            <li>Group people into teams and set the skills each team requires</li>
+          </ul>
+        </article>
+
+        <article class="step">
+          <span class="step__num"></span>
+          <h3>Assess and let it watch</h3>
+          <p>Record an assessment with a level, an assessor, a date and — where it matters — an expiry. From then on the system does the watching, not you.</p>
+          <ul>
+            <li>Assess one person or a whole team in a single pass</li>
+            <li>RAG status recalculates against expiry <em>and</em> the team's required level</li>
+            <li>In-app and email reminders at each warning threshold</li>
+            <li>Monday digest of everything expired or expiring within 90 days</li>
+          </ul>
+        </article>
+
+        <article class="step">
+          <span class="step__num"></span>
+          <h3>Prove it on demand</h3>
+          <p>When the auditor asks, the answer is already assembled — by person, by team, by skill, and by the clause of the standard that required it.</p>
+          <ul>
+            <li>Gap analysis: who is missing what, ranked by risk</li>
+            <li>Full assessment history with assessor and date on every record</li>
+            <li>CSV export and clean print output</li>
+            <li>Clause-by-clause evidence with the Compliance module</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= FEATURES ========= -->
+  <section class="section section--shell" id="features">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">The Skills Matrix module</p>
+        <h2>Everything the grid should have been doing all along</h2>
+        <p class="lede">
+          Included on every plan, free one included. The differences between plans are how many people
+          and skills you track — not whether the product works.
+        </p>
+      </div>
+
+      <div class="grid grid--3">
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-grid"/></svg></span>
+          <h3>The live matrix</h3>
+          <p>People down the side, skills across the top, every cell coloured by real status. Filter by team, category or skill and see the whole operation in one screen.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon icon--teal"><svg aria-hidden="true"><use href="#i-target"/></svg></span>
+          <h3>RAG status with rules, not opinions</h3>
+          <p>Green when current and at level. Amber inside the warning window. Red when expired <em>or</em> below the minimum the team requires. Grey when never assessed. The same rules everywhere, every time.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon icon--amber"><svg aria-hidden="true"><use href="#i-bell"/></svg></span>
+          <h3>Expiry reminders that actually send</h3>
+          <p>A scheduled engine runs daily and fires once as each assessment crosses 90, 60 and 30 days — configurable per skill — to team managers, admins, and optionally the person themselves.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-chart"/></svg></span>
+          <h3>Gap analysis</h3>
+          <p>Set the skills each team requires and the minimum level for each. Gap analysis then lists exactly who is short, where, and by how much — the single-points-of-failure view auditors ask for.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon icon--teal"><svg aria-hidden="true"><use href="#i-history"/></svg></span>
+          <h3>Assessment history that holds up</h3>
+          <p>Assessments are append-only. Every record keeps the level, the assessor, the date, and any notes, so you can show progression over time instead of a single overwritten cell.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-layers"/></svg></span>
+          <h3>Skills library &amp; categories</h3>
+          <p>One curated library rather than six spellings of the same certificate. Group into categories, mark which skills expire, and set the warning thresholds that suit each one.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon icon--teal"><svg aria-hidden="true"><use href="#i-upload"/></svg></span>
+          <h3>Templates &amp; bulk import</h3>
+          <p>Six industry starting points — manufacturing, food, healthcare, construction, retail, office — plus CSV import for people and bulk assessment for a whole team in one pass.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-download"/></svg></span>
+          <h3>Export and print</h3>
+          <p>CSV export from Starter upwards, plus print-ready views for the pack you hand across the table. Your data never becomes the reason you can't leave.</p>
+        </article>
+
+        <article class="card card--hover">
+          <span class="icon icon--green"><svg aria-hidden="true"><use href="#i-lock"/></svg></span>
+          <h3>Roles, invitations &amp; activity log</h3>
+          <p>Admin, manager and viewer roles, email invitations, an in-app notification centre and an activity log of the changes that matter — so competence data isn't wide open to everyone.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ EXPIRY DEEP DIVE ====== -->
+  <section class="section">
+    <div class="wrap split">
+      <div>
+        <p class="eyebrow"><svg width="14" height="14" aria-hidden="true"><use href="#i-bell"/></svg> The bit that pays for itself</p>
+        <h2>The reminder fires before it matters, and only once</h2>
+        <div class="split__body">
+          <p class="lede">
+            The single most common failure in competency management is that nobody is told. Skills
+            Matrix App treats reminders as an engine, not a toggle.
+          </p>
+        </div>
+        <ul class="checks">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg>
+            <strong>Daily, not on login</strong>
+            A scheduled job checks every live assessment with an expiry date, whether or not anyone opens the app that week.
+          </li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg>
+            <strong>Thresholds you choose</strong>
+            90, 60 and 30 days by default, set per skill. A three-year forklift ticket and a one-year first-aid certificate don't need the same lead time.
+          </li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg>
+            <strong>The right people</strong>
+            The managers of every team the person belongs to, plus your admins — and the person themselves, in-app if they have a login and by email if they don't.
+          </li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg>
+            <strong>Once per threshold, never a flood</strong>
+            Each event is de-duplicated, so a missed run is caught up on the next one instead of skipped — and nobody gets the same warning twice.
+          </li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg>
+            <strong>A Monday digest</strong>
+            One summary email per manager and admin listing everything expired or expiring within 90 days. Switch it off per organisation if you'd rather not have it.
+          </li>
+        </ul>
+      </div>
+
+      <div class="split__media">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>This week's reminders</h3>
+            <span>Sent automatically</span>
+          </div>
+          <div class="panel__body">
+            <ul class="timeline">
+              <li><span class="tag tag--r">Expired</span> First Aid at Work — D.&nbsp;Marsh <span class="when">emailed</span></li>
+              <li><span class="tag tag--a">30 days</span> Forklift Operation — J.&nbsp;Okafor <span class="when">in-app</span></li>
+              <li><span class="tag tag--a">60 days</span> Food Hygiene L2 — A.&nbsp;Nowak <span class="when">in-app</span></li>
+              <li><span class="tag tag--a">90 days</span> HACCP Awareness — 4 people <span class="when">in-app</span></li>
+              <li><span class="tag tag--g">Digest</span> Monday summary — 3 managers, 2 admins <span class="when">emailed</span></li>
+            </ul>
+            <p style="margin-top:1rem;font-size:.82rem;color:var(--ink-3)">
+              Every line above is generated by the scheduler — not by someone remembering to look.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ PROFICIENCY SCALE ===== -->
+  <section class="section section--shell-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow eyebrow--plain">One scale, defined for you</p>
+        <h2>No more arguing about what "3 out of 5" means</h2>
+        <p class="lede">
+          Home-made matrices drift because every assessor invents their own scale. Skills Matrix App
+          ships one fixed levelled scale plus a binary type for skills that are simply held or not.
+        </p>
+      </div>
+
+      <div class="scale">
+        <div class="scale__item">
+          <p class="scale__level">0</p>
+          <div class="scale__bar"><i style="width:4%"></i></div>
+          <h4>Not Trained</h4>
+          <p>No training delivered. Must not perform the task.</p>
+        </div>
+        <div class="scale__item">
+          <p class="scale__level">1</p>
+          <div class="scale__bar"><i style="width:25%"></i></div>
+          <h4>Awareness</h4>
+          <p>Understands the task and the risk. Not yet working on it.</p>
+        </div>
+        <div class="scale__item">
+          <p class="scale__level">2</p>
+          <div class="scale__bar"><i style="width:50%"></i></div>
+          <h4>Working Knowledge</h4>
+          <p>Performs the task under supervision.</p>
+        </div>
+        <div class="scale__item">
+          <p class="scale__level">3</p>
+          <div class="scale__bar"><i style="width:75%"></i></div>
+          <h4>Competent</h4>
+          <p>Works unsupervised to the required standard.</p>
+        </div>
+        <div class="scale__item">
+          <p class="scale__level">4</p>
+          <div class="scale__bar"><i style="width:100%"></i></div>
+          <h4>Expert</h4>
+          <p>Works unsupervised and can assess or train others.</p>
+        </div>
+        <div class="scale__item">
+          <p class="scale__level scale__level--sym">✓&nbsp;/&nbsp;✗</p>
+          <div class="scale__bar"><i style="width:100%;background:var(--green)"></i></div>
+          <h4>Binary skills</h4>
+          <p>For certificates that are simply held or not — with their own expiry date.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================ COMPLIANCE ======== -->
+  <section class="section band" id="compliance">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow">
+          <svg width="14" height="14" aria-hidden="true"><use href="#i-shield"/></svg>
+          Optional add-on · £49/month + VAT
+        </p>
+        <h2>Compliance &amp; Audit Readiness</h2>
+        <p class="lede">
+          Most quality systems organise evidence the way the business is shaped. Auditors walk the
+          standard clause by clause. This module organises your evidence the way the auditor reads it.
+        </p>
+      </div>
+
+      <div class="split" style="margin-bottom:clamp(2.5rem,5vw,4rem)">
+        <div>
+          <h3 style="font-size:clamp(1.35rem,2.4vw,1.75rem);margin-bottom:1rem">Clause-by-clause evidence mapping</h3>
+          <p>
+            Every clause of your standard becomes a live record with a status, an owner and the
+            evidence attached to it. Link a document, a training record, an audit or a calibration
+            certificate to the clause it satisfies, and the readiness score updates.
+          </p>
+          <ul class="checks">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>Readiness dashboard</strong>A single RAG picture across every clause, with a score and a countdown to your audit date.</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>Section-level readiness</strong>See which parts of the standard are carrying the risk before the auditor does.</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>Action Centre</strong>One surface aggregating everything overdue or expiring across the whole system — skills, documents, CAPAs, calibrations, supplier certificates.</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>Audit checklist</strong>Walk the standard the way the auditor will, and see what is not yet evidenced.</li>
+          </ul>
+
+          <ul class="standards" aria-label="Standards with clause libraries">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> BRCGS Packaging Materials · Issue 7</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> ISO 9001:2015</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> ISO 14001:2015</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> ISO 45001:2018</li>
+            <li class="is-soon"><svg aria-hidden="true"><use href="#i-clock"/></svg> More BRCGS standards in progress</li>
+          </ul>
+        </div>
+
+        <div class="split__media">
+          <div class="panel">
+            <div class="panel__head">
+              <h3>Audit readiness</h3>
+              <span>BRCGS Packaging · Issue 7</span>
+            </div>
+            <div class="panel__body">
+              <div class="ring-wrap" style="margin-bottom:1.1rem">
+                <div class="ring">
+                  <svg width="108" height="108" viewBox="0 0 108 108" aria-hidden="true">
+                    <circle cx="54" cy="54" r="46" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="10"/>
+                    <circle cx="54" cy="54" r="46" fill="none" stroke="#6fd6a5" stroke-width="10"
+                            stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="66"/>
+                  </svg>
+                  <p class="ring__val">77%<small>Ready</small></p>
+                </div>
+                <div>
+                  <p style="font-size:.86rem;color:#a9bcd8;margin-bottom:.4rem">Audit in <strong style="color:#fff">34 days</strong></p>
+                  <p style="font-size:.82rem;color:#96a9c6">41 clauses evidenced · 9 in progress · 2 not started</p>
+                </div>
+              </div>
+              <ul class="clauses">
+                <li><span class="num">6.1</span> <span>Personnel training &amp; competence</span> <span class="pill pill--g">Ready</span></li>
+                <li><span class="num">3.5</span> <span>Supplier approval &amp; monitoring</span> <span class="pill pill--a">In progress</span></li>
+                <li><span class="num">4.9</span> <span>Glass &amp; brittle plastic control</span> <span class="pill pill--g">Ready</span></li>
+                <li><span class="num">3.11</span> <span>Corrective &amp; preventive action</span> <span class="pill pill--r">Not started</span></li>
+                <li><span class="num">5.4</span> <span>Equipment calibration</span> <span class="pill pill--a">In progress</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="center" style="font-size:1.25rem;margin-bottom:1.5rem">The registers a certification audit asks for</h3>
+      <div class="grid grid--3">
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-file"/></svg></span>
+          <h3>Document register</h3>
+          <p>Procedures, policies and forms with owners, review dates and version records — so "when was this last reviewed?" has an answer.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-clipboard"/></svg></span>
+          <h3>Internal audits</h3>
+          <p>Plan, schedule and record internal audits against the clauses they cover, with findings carried straight into non-conformances.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <h3>Non-conformances &amp; CAPAs</h3>
+          <p>Track every NC from detection through root cause to verified close-out, with due dates that surface in the Action Centre when they slip.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-truck"/></svg></span>
+          <h3>Supplier approval</h3>
+          <p>Approved supplier register with certificate expiry tracked the same way competence is — visibly, and in advance.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-wrench"/></svg></span>
+          <h3>Calibration register</h3>
+          <p>Equipment, calibration records and due dates, so a piece of kit never quietly drifts out of certification.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-chart"/></svg></span>
+          <h3>Complaints &amp; management review</h3>
+          <p>Log and trend customer complaints, and pull the management review inputs together from the data already in the system.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-shield"/></svg></span>
+          <h3>Food-sector registers</h3>
+          <p>Glass &amp; brittle plastic and pest control registers appear automatically when a food-sector standard is enabled, and stay hidden when it isn't.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-users"/></svg></span>
+          <h3>Training &amp; competence register</h3>
+          <p>Auto-populated from your skills matrix assessments. The training evidence clause 6 wants is already there — you don't type it twice.</p>
+        </article>
+        <article class="card card--hover">
+          <span class="icon"><svg aria-hidden="true"><use href="#i-chart"/></svg></span>
+          <h3>Compliance analytics</h3>
+          <p>Trends across non-conformances, CAPAs and readiness, plus an audit guide that explains what each part of the standard is asking for.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== INTEGRATION ========= -->
+  <section class="section">
+    <div class="wrap split split--flip">
+      <div class="split__media">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>One system, two modules</h3>
+            <span>Shared data</span>
+          </div>
+          <div class="panel__body">
+            <ul class="timeline">
+              <li><span class="tag tag--g">Auto</span> Training register filled from skills assessments <span class="when">no re-entry</span></li>
+              <li><span class="tag tag--g">Auto</span> Expired skills raised in the Action Centre <span class="when">daily</span></li>
+              <li><span class="tag tag--g">Auto</span> Skills compliance feeds the readiness score <span class="when">live</span></li>
+              <li><span class="tag tag--g">Shared</span> People, teams, roles and invitations <span class="when">one set</span></li>
+              <li><span class="tag tag--g">Shared</span> Notifications and activity log <span class="when">one trail</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow"><svg width="14" height="14" aria-hidden="true"><use href="#i-link"/></svg> Why both together</p>
+        <h2>Competence <em>is</em> the clause most sites fail</h2>
+        <div class="split__body">
+          <p class="lede">
+            Training and competence is one of the most frequently raised findings in food and
+            manufacturing audits, and it is the clause a separate training spreadsheet can never
+            evidence properly.
+          </p>
+        </div>
+        <ul class="checks">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>No double entry</strong>The compliance training register reads your assessments directly. Record competence once; it shows up as audit evidence.</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>One expiry story</strong>An expired ticket isn't just an amber cell — it becomes a compliance action with a due date.</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>One set of people</strong>Teams, roles, invitations and permissions are shared, so a leaver is removed once.</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><strong>Independent billing</strong>The module is an add-on. Turn it on for an audit cycle, off afterwards — the skills matrix carries on regardless.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================ INDUSTRIES ======== -->
+  <section class="section section--shell" id="who">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">Who it's for</p>
+        <h2>Built for the 20-to-250-person site</h2>
+        <p class="lede">
+          Big enough that a spreadsheet is genuinely dangerous, small enough that an enterprise LMS
+          rollout is absurd. Each template below ships with categories and skills already in it.
+        </p>
+      </div>
+
+      <div class="industries">
+        <article class="industry">
+          <h3>Manufacturing &amp; engineering</h3>
+          <ul><li>Manual Handling</li><li>Forklift Operation</li><li>CNC Operation</li><li>Welding (MIG/TIG)</li><li>ISO 9001 Awareness</li><li>Calibration</li></ul>
+        </article>
+        <article class="industry">
+          <h3>Food production &amp; FMCG</h3>
+          <ul><li>Food Hygiene L2 &amp; L3</li><li>HACCP Awareness</li><li>Allergen Awareness</li><li>Packing Line Operation</li><li>Cold Chain</li><li>Labelling</li></ul>
+        </article>
+        <article class="industry">
+          <h3>Healthcare &amp; care services</h3>
+          <ul><li>First Aid at Work</li><li>Medication Administration</li><li>Infection Control</li><li>Safeguarding</li><li>Mental Capacity Act</li><li>Moving &amp; Handling</li></ul>
+        </article>
+        <article class="industry">
+          <h3>Construction &amp; trades</h3>
+          <ul><li>Working at Height</li><li>CSCS</li><li>Asbestos Awareness</li><li>Plant Operation</li><li>Site Safety</li><li>PPE</li></ul>
+        </article>
+        <article class="industry">
+          <h3>Retail &amp; hospitality</h3>
+          <ul><li>Food Hygiene</li><li>Licensing</li><li>Fire Safety</li><li>Customer Service</li><li>Till &amp; Cash</li><li>Stock Control</li></ul>
+        </article>
+        <article class="industry">
+          <h3>Office &amp; professional services</h3>
+          <ul><li>GDPR Awareness</li><li>Fire Marshal</li><li>DSE Assessment</li><li>Software Proficiency</li><li>Project Management</li><li>First Aid</li></ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================== PRICING ======== -->
+  <section class="section" id="pricing">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">Pricing</p>
+        <h2>You pay for the people you track — not for every login</h2>
+        <p class="lede">
+          Employees on the matrix are records, not licences. Only admin and manager seats are limited,
+          so a hundred shop-floor operators don't cost a hundred subscriptions.
+        </p>
+      </div>
+
+      <div class="center">
+        <div class="toggle" role="group" aria-label="Billing interval">
+          <button type="button" data-interval="monthly" aria-pressed="true">Monthly</button>
+          <button type="button" data-interval="annual" aria-pressed="false">Annual <span class="save">2 months free</span></button>
+        </div>
+      </div>
+
+      <div class="plans">
+        <article class="plan">
+          <h3>Free</h3>
+          <p class="plan__for">Prove it works on one team before you spend anything.</p>
+          <p class="plan__price">
+            <span class="plan__amount">£0</span>
+            <span class="plan__per">forever</span>
+          </p>
+          <p class="plan__billed">No card, no time limit.</p>
+          <a class="btn btn--ghost btn--block" href="https://app.skillsmatrixapp.com/">Start free</a>
+          <ul class="plan__list">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Up to 5 employees</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> 15 skills, 3 categories</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> 1 admin seat</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Full matrix, RAG status &amp; expiry reminders</li>
+          </ul>
+        </article>
+
+        <article class="plan">
+          <h3>Starter</h3>
+          <p class="plan__for">A single site getting its training records straight.</p>
+          <p class="plan__price">
+            <span class="plan__amount" data-price="starter">£39</span>
+            <span class="plan__per">/month + VAT</span>
+          </p>
+          <p class="plan__billed" data-billed="starter">Billed monthly.</p>
+          <a class="btn btn--ghost btn--block" href="https://app.skillsmatrixapp.com/">Start 14-day trial</a>
+          <ul class="plan__list">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Up to 30 employees</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> 50 skills, 5 categories</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> 2 admins + 3 manager seats</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Gap analysis reports</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> CSV export</li>
+          </ul>
+        </article>
+
+        <article class="plan plan--featured">
+          <span class="plan__flag">Most chosen</span>
+          <h3>Growth</h3>
+          <p class="plan__for">A full site with several teams and a real audit calendar.</p>
+          <p class="plan__price">
+            <span class="plan__amount" data-price="growth">£79</span>
+            <span class="plan__per">/month + VAT</span>
+          </p>
+          <p class="plan__billed" data-billed="growth">Billed monthly.</p>
+          <a class="btn btn--primary btn--block" href="https://app.skillsmatrixapp.com/">Start 14-day trial</a>
+          <ul class="plan__list">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Up to 100 employees</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Unlimited skills &amp; categories</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> 3 admins + unlimited managers</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Gap analysis reports</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> CSV export</li>
+          </ul>
+        </article>
+
+        <article class="plan">
+          <h3>Scale</h3>
+          <p class="plan__for">Larger sites, or several teams under one organisation.</p>
+          <p class="plan__price">
+            <span class="plan__amount" data-price="scale">£149</span>
+            <span class="plan__per">/month + VAT</span>
+          </p>
+          <p class="plan__billed" data-billed="scale">Billed monthly.</p>
+          <a class="btn btn--ghost btn--block" href="https://app.skillsmatrixapp.com/">Start 14-day trial</a>
+          <ul class="plan__list">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Up to 250 employees</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Unlimited skills &amp; categories</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Unlimited admin &amp; manager seats</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> Gap analysis reports</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg> CSV export</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="addon">
+        <div>
+          <h3>Compliance &amp; Audit Readiness add-on</h3>
+          <p>
+            Clause-by-clause evidence mapping, readiness scoring, the Action Centre and every register
+            above. Independent of your Skills Matrix plan — add it for an audit cycle and remove it
+            afterwards. 14-day trial, no card.
+          </p>
+        </div>
+        <div class="addon__price">
+          <p class="plan__price" style="justify-content:flex-start">
+            <span class="plan__amount" data-price="brc">£49</span>
+            <span class="plan__per">/month + VAT</span>
+          </p>
+          <p class="plan__billed" data-billed="brc" style="margin-bottom:.9rem">Billed monthly.</p>
+          <a class="btn btn--accent" href="https://app.skillsmatrixapp.com/upgrade-brc">
+            Add the module <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <p class="price-foot">
+        All prices exclude VAT. Trials need no card. If a subscription lapses your organisation moves
+        down to the Free plan — you are never locked out of your own records.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================================================== TRUST ======== -->
+  <section class="section section--shell-soft" id="trust">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">Data &amp; trust</p>
+        <h2>Competency data is personal data &mdash; and we treat it that way</h2>
+      </div>
+
+      <div class="trust">
+        <div class="trust__item">
+          <svg aria-hidden="true"><use href="#i-lock"/></svg>
+          <div>
+            <h3>Role-based access</h3>
+            <p>Admin, manager and viewer roles. Managers see their teams; viewers see their own record. Assessment data isn't open to the whole organisation by default.</p>
+          </div>
+        </div>
+        <div class="trust__item">
+          <svg aria-hidden="true"><use href="#i-file"/></svg>
+          <div>
+            <h3>UK operator, published DPA</h3>
+            <p>Operated by Conryx Ltd, registered in England and Wales. A Data Processing Agreement, privacy policy, cookie policy and terms are published and versioned.</p>
+          </div>
+        </div>
+        <div class="trust__item">
+          <svg aria-hidden="true"><use href="#i-history"/></svg>
+          <div>
+            <h3>Activity log</h3>
+            <p>An in-app log of the changes that matter — who did what and when — so competence records are traceable rather than mysteriously different.</p>
+          </div>
+        </div>
+        <div class="trust__item">
+          <svg aria-hidden="true"><use href="#i-download"/></svg>
+          <div>
+            <h3>Your data leaves with you</h3>
+            <p>Subject access exports, organisation-level export and CSV downloads. Exports are never withheld to force an upgrade or to make leaving painful.</p>
+          </div>
+        </div>
+        <div class="trust__item">
+          <svg aria-hidden="true"><use href="#i-users"/></svg>
+          <div>
+            <h3>Consent handled properly</h3>
+            <p>Cookie consent is collected before non-essential cookies are set, and the policy explains exactly what is stored and why.</p>
+          </div>
+        </div>
+        <div class="trust__item">
+          <svg aria-hidden="true"><use href="#i-shield"/></svg>
+          <div>
+            <h3>Honest feature claims</h3>
+            <p>Everything described on this page exists in the product today. Where something is still being built — further BRCGS clause libraries, for instance — it says so.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================= FAQ ======== -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="section-head section-head--center">
+        <p class="eyebrow eyebrow--plain">FAQ</p>
+        <h2>The questions buyers actually ask</h2>
+      </div>
+
+      <div class="faq">
+        <details>
+          <summary>Do I need a credit card to start?</summary>
+          <div class="faq__answer">
+            <p>No. The Free plan is free forever for up to 5 employees and needs no card. Paid plans include a 14-day trial that also starts without a card — you only enter payment details if you decide to continue.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Do I pay for every employee on the matrix?</summary>
+          <div class="faq__answer">
+            <p>No. Employees are tracked records, not licences. Your plan limits how many people you can track and how many admin and manager <em>logins</em> you have. Shop-floor operators who never sign in cost nothing per head — which is the opposite of how most competency tools price.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Which audit standards does the Compliance module support?</summary>
+          <div class="faq__answer">
+            <p>Clause libraries ship today for <strong>BRCGS Packaging Materials (Issue 7)</strong>, <strong>ISO 9001:2015</strong>, <strong>ISO 14001:2015</strong> and <strong>ISO 45001:2018</strong>.</p>
+            <p>Further BRCGS standards — Food Safety, Storage &amp; Distribution, Agents &amp; Brokers and Consumer Products — are on the roadmap. The clause, evidence and readiness engine itself is standard-agnostic, so adding a library is content work rather than a rebuild.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Will I actually be warned before a certificate expires?</summary>
+          <div class="faq__answer">
+            <p>Yes — this is the part most tools get wrong. A scheduled engine runs daily. As each assessment crosses a warning threshold (90, 60 and 30 days by default, configurable per skill) it notifies the person's team managers and your admins in-app, and emails on expiry. A Monday digest summarises everything expired or expiring within 90 days.</p>
+            <p>Each event fires once per assessment per threshold, so nobody is spammed — and a missed run is caught up on the next one rather than skipped.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Can I move my existing spreadsheet across?</summary>
+          <div class="faq__answer">
+            <p>Import your people from CSV, then start from one of six industry skill templates — manufacturing and engineering, food production and FMCG, healthcare and care, construction and trades, retail and hospitality, or office and professional services — and edit from there rather than typing a taxonomy from scratch.</p>
+            <p>Most sites have a usable matrix the same afternoon.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Can I get my data back out?</summary>
+          <div class="faq__answer">
+            <p>Yes. CSV export is available from Starter upwards and is never withheld to force an upgrade. There is a full organisation export and a subject access export for individual records.</p>
+            <p>If a paid plan lapses, your organisation moves down to the Free plan rather than being locked out, and your data stays intact.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Is it GDPR compliant?</summary>
+          <div class="faq__answer">
+            <p>Skills Matrix App is operated by Conryx Ltd, a company registered in England and Wales. A Data Processing Agreement, privacy policy and cookie policy are published, cookie consent is collected before non-essential cookies are set, subject access exports are supported, and access is limited by admin, manager and viewer roles.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Do I have to buy the Compliance module?</summary>
+          <div class="faq__answer">
+            <p>No. It is an optional add-on at £49 per month excluding VAT, independent of your Skills Matrix plan, with a 14-day trial.</p>
+            <p>The skills matrix works perfectly well on its own. When the module is on, the two share people, teams, notifications and the activity log — and the compliance training register fills itself from your assessments.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Does it work on a tablet on the shop floor?</summary>
+          <div class="faq__answer">
+            <p>Yes — the app is responsive and runs in the browser on a tablet or phone, with no install and nothing to deploy to devices. It is a connected web application, so it needs a network connection; there is no offline mode today.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================== FINAL CTA ======= -->
+  <section class="section cta">
+    <div class="wrap">
+      <h2>Find out what's expiring before your auditor does</h2>
+      <p>
+        Start with five people and a template. If it isn't telling you something your spreadsheet
+        wasn't within the hour, you've lost nothing.
+      </p>
+      <div class="btn-row">
+        <a class="btn btn--accent" href="https://app.skillsmatrixapp.com/">
+          Start free — no card needed <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+        </a>
+        <a class="btn btn--onnavy" href="#pricing">Compare plans</a>
+      </div>
+      <p class="cta__foot">Free forever for up to 5 employees · 14-day trial on paid plans · Cancel any time</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <a class="brand" href="/" aria-label="Skills Matrix App — home">
+          <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+            <rect width="32" height="32" rx="7" fill="#1A3A7A"/>
+            <rect x="7" y="7" width="5" height="5" rx="1" fill="#0D87A8"/>
+            <rect x="14" y="7" width="5" height="5" rx="1" fill="#0D87A8" opacity=".6"/>
+            <rect x="21" y="7" width="4" height="5" rx="1" fill="#0D87A8" opacity=".3"/>
+            <rect x="7" y="14" width="5" height="5" rx="1" fill="#fff" opacity=".9"/>
+            <rect x="14" y="14" width="5" height="5" rx="1" fill="#0D87A8"/>
+            <rect x="21" y="14" width="4" height="5" rx="1" fill="#0D87A8" opacity=".6"/>
+            <rect x="7" y="21" width="5" height="4" rx="1" fill="#fff" opacity=".5"/>
+            <rect x="14" y="21" width="5" height="4" rx="1" fill="#fff" opacity=".9"/>
+            <rect x="21" y="21" width="4" height="4" rx="1" fill="#0D87A8"/>
+          </svg>
+          <span class="brand__name">Skills&nbsp;Matrix<span>&nbsp;App</span></span>
+        </a>
+        <p>
+          Workforce competency and audit-readiness software for manufacturing SMEs working to
+          BRCGS, ISO 9001, ISO 14001 and ISO 45001.
+        </p>
+      </div>
+
+      <div class="footer__col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Skills matrix</a></li>
+          <li><a href="#compliance">Compliance module</a></li>
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#who">Industries</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#trust">Data &amp; trust</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="https://app.skillsmatrixapp.com/">Sign in</a></li>
+          <li><a href="https://app.skillsmatrixapp.com/">Start free</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://app.skillsmatrixapp.com/privacy">Privacy policy</a></li>
+          <li><a href="https://app.skillsmatrixapp.com/terms">Terms of service</a></li>
+          <li><a href="https://app.skillsmatrixapp.com/cookies">Cookie policy</a></li>
+          <li><a href="https://app.skillsmatrixapp.com/dpa">Data processing</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- STATUTORY: add Companies House number, ICO registration and registered
+         office below before launch. A UK compliance product with blank
+         statutory details undermines the trust the rest of the page builds. -->
+    <div class="footer__bottom">
+      <p>© <span id="year">2026</span> Conryx Ltd. All rights reserved.</p>
+      <nav aria-label="Legal">
+        <a href="https://app.skillsmatrixapp.com/privacy">Privacy</a>
+        <a href="https://app.skillsmatrixapp.com/terms">Terms</a>
+        <a href="https://app.skillsmatrixapp.com/cookies">Cookies</a>
+        <a href="https://app.skillsmatrixapp.com/dpa">DPA</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js" defer></script>
+</body>
+</html>
